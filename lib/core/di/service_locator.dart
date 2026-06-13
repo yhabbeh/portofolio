@@ -9,7 +9,6 @@ import '../../features/portfolio/domain/usecases/submit_contact.dart';
 import '../../features/portfolio/presentation/blocs/contact/contact_bloc.dart';
 import '../../features/portfolio/presentation/blocs/portfolio/portfolio_bloc.dart';
 import '../../features/theme/presentation/bloc/theme_cubit.dart';
-import '../services/email_service.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -17,9 +16,6 @@ Future<void> initServiceLocator() async {
   // External
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
-
-  // Services
-  sl.registerLazySingleton<EmailService>(() => EmailService());
 
   // Features - Theme
   sl.registerLazySingleton<ThemeCubit>(
@@ -33,10 +29,7 @@ Future<void> initServiceLocator() async {
 
   // Features - Portfolio - Repositories
   sl.registerLazySingleton<PortfolioRepository>(
-    () => PortfolioRepositoryImpl(
-      localDataSource: sl(),
-      emailService: sl(),
-    ),
+    () => PortfolioRepositoryImpl(localDataSource: sl()),
   );
 
   // Features - Portfolio - Usecases

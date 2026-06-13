@@ -1,19 +1,16 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../features/portfolio/presentation/blocs/contact/contact_bloc.dart';
-import '../features/portfolio/presentation/blocs/contact/contact_event.dart';
-import '../features/portfolio/presentation/blocs/contact/contact_state.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class ContactFormDialog extends StatefulWidget {
-  const ContactFormDialog({super.key});
+  final String recipientEmail;
 
-  static Future<void> show(BuildContext context) {
+  const ContactFormDialog({super.key, required this.recipientEmail});
+
+  static Future<void> show(BuildContext context, {required String email}) {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const ContactFormDialog(),
+      builder: (_) => ContactFormDialog(recipientEmail: email),
     );
   }
 
@@ -30,6 +27,7 @@ class _ContactFormDialogState extends State<ContactFormDialog>
   late final AnimationController _animController;
   late final Animation<double> _scaleAnim;
   late final Animation<double> _fadeAnim;
+  bool _sending = false;
 
   @override
   void initState() {
@@ -52,15 +50,60 @@ class _ContactFormDialogState extends State<ContactFormDialog>
     super.dispose();
   }
 
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      context.read<ContactBloc>().add(
-            SubmitContactFormEvent(
-              name: _nameController.text,
-              email: _emailController.text,
-              message: _messageController.text,
-            ),
-          );
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _sending = true);
+
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final message = _messageController.text.trim();
+
+    final subject = 'Portfolio Contact from $name';
+    final body = '''
+Name: $name
+Email: $email
+
+Message:
+$message
+''';
+
+    final uri = 'mailto:${widget.recipientEmail}?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}';
+
+    final launched = await launchUrlString(uri, mode: LaunchMode.externalApplication);
+
+    if (!mounted) return;
+    setState(() => _sending = false);
+
+    if (launched) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(child: Text('Email client opened! Just hit send.')),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      _close();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(child: Text('Could not open email client.')),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -104,19 +147,20 @@ class _ContactFormDialogState extends State<ContactFormDialog>
                       children: [
                         _buildField(
                           controller: _nameController,
-                          label: 'Name',
+                          label: 'Your Name',
                           icon: Icons.person_outline,
+                          textCapitalization: TextCapitalization.words,
                           validator: (val) =>
-                              (val == null || val.isEmpty) ? 'Please enter your name' : null,
+                              (val == null || val.trim().isEmpty) ? 'Please enter your name' : null,
                         ),
                         const SizedBox(height: 16),
                         _buildField(
                           controller: _emailController,
-                          label: 'Email',
+                          label: 'Your Email',
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: (val) {
-                            if (val == null || val.isEmpty) return 'Please enter your email';
+                            if (val == null || val.trim().isEmpty) return 'Please enter your email';
                             final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                             if (!emailRegExp.hasMatch(val)) {
                               return 'Please enter a valid email address';
@@ -130,92 +174,58 @@ class _ContactFormDialogState extends State<ContactFormDialog>
                           label: 'Message',
                           icon: Icons.chat_bubble_outline,
                           maxLines: 4,
+                          textCapitalization: TextCapitalization.sentences,
                           validator: (val) =>
-                              (val == null || val.isEmpty) ? 'Please enter your message' : null,
+                              (val == null || val.trim().isEmpty) ? 'Please enter your message' : null,
                         ),
                         const SizedBox(height: 24),
-                        BlocConsumer<ContactBloc, ContactState>(
-                          listener: (context, state) {
-                            if (state is ContactSuccess) {
-                              _nameController.clear();
-                              _emailController.clear();
-                              _messageController.clear();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Row(
-                                    children: [
-                                      Icon(Icons.check_circle, color: Colors.white),
-                                      SizedBox(width: 8),
-                                      Text('Message sent successfully!'),
-                                    ],
-                                  ),
-                                  backgroundColor: Colors.green.shade600,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                              _close();
-                            } else if (state is ContactFailure) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.error, color: Colors.white),
-                                      const SizedBox(width: 8),
-                                      Expanded(child: Text('Error: ${state.error}')),
-                                    ],
-                                  ),
-                                  backgroundColor: Colors.red.shade600,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          },
-                          builder: (context, state) {
-                            if (state is ContactSubmitting) {
-                              return SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: null,
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    backgroundColor: colors.primary,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: SizedBox(
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _sending ? null : _submit,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: colors.primary,
+                              foregroundColor: colors.onPrimary,
+                              elevation: 2,
+                              shadowColor: colors.primary.withValues(alpha: 0.4),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: _sending
+                                ? SizedBox(
                                     height: 20,
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       color: colors.onPrimary,
                                     ),
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.send_rounded, size: 20),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Open Email Client',
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              );
-                            }
-                            return SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _submit,
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  backgroundColor: colors.primary,
-                                  foregroundColor: colors.onPrimary,
-                                  elevation: 2,
-                                  shadowColor: colors.primary.withValues(alpha: 0.4),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Send Message',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            );
-                          },
+                          ),
                         ),
+                        if (!_sending) ...[
+                          const SizedBox(height: 12),
+                          Center(
+                            child: Text(
+                              'Opens your email client with a pre-composed message',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colors.onSurface.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -271,12 +281,14 @@ class _ContactFormDialogState extends State<ContactFormDialog>
     required IconData icon,
     TextInputType? keyboardType,
     int maxLines = 1,
+    TextCapitalization textCapitalization = TextCapitalization.none,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      textCapitalization: textCapitalization,
       validator: validator,
       decoration: InputDecoration(
         labelText: label,

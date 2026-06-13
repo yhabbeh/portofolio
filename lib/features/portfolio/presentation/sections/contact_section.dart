@@ -177,7 +177,7 @@ class ContactSection extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => ContactFormDialog.show(context),
+                onPressed: () => ContactFormDialog.show(context, email: email),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: colors.primary,
