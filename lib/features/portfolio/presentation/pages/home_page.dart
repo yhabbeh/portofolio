@@ -1,4 +1,8 @@
+import 'dart:html' as html;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -119,6 +123,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _openDownload(String cvAsset, String email) async {
+    if (kIsWeb) {
+      try {
+        final byteData = await rootBundle.load(cvAsset);
+        final bytes = byteData.buffer.asUint8List();
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.document.createElement('a') as html.AnchorElement
+          ..href = url
+          ..download = 'Yousef_Habbeh_CV.pdf';
+        html.document.body?.append(anchor);
+        anchor.click();
+        anchor.remove();
+        html.Url.revokeObjectUrl(url);
+        return;
+      } catch (_) {}
+    }
     final uri = Uri.base.resolve(cvAsset);
     final launched = await launchUrlString(
       uri.toString(),
