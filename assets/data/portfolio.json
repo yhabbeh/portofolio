@@ -140,18 +140,11 @@
       "title": "Mobile Applications",
       "projects": [
         {
-          "name": "drugmngqwn",
+          "name": "Drug Managment",
           "description": "Home Pharmacy Management & Medication Reminders. An offline-first Android app built with Clean Architecture and BLoC/Cubit.",
           "technologies": ["Flutter", "Dart", "BLoC", "Clean Architecture", "SQLite"],
-          "github_url": "https://github.com/yhabbeh/drugmngqwn",
-          "stars": 0
-        },
-        {
-          "name": "drug_reminder",
-          "description": "Medication management app with scheduling, dose reminders, and contact integration.",
-          "technologies": ["Flutter", "Dart", "BLoC", "Notifications"],
-          "github_url": "https://github.com/yhabbeh/drug_reminder",
-          "stars": 0
+          "github_url": "https://github.com/yhabbeh/drugMNG",
+          "stars": 1
         },
         {
           "name": "dental-appointment-mobile",
@@ -173,27 +166,6 @@
           "technologies": ["Flutter", "Dart"],
           "github_url": "https://github.com/yhabbeh/Neuro_Stem",
           "stars": 2
-        },
-        {
-          "name": "Clean_architecture",
-          "description": "Flutter project demonstrating clean architecture principles with domain, data, and presentation layer separation.",
-          "technologies": ["Flutter", "Dart", "Clean Architecture"],
-          "github_url": "https://github.com/yhabbeh/Clean_architecture",
-          "stars": 1
-        },
-        {
-          "name": "Flutter_UI_task1",
-          "description": "Flutter UI exploration project showcasing custom widget design and layout techniques.",
-          "technologies": ["Flutter", "Dart", "UI/UX"],
-          "github_url": "https://github.com/yhabbeh/Flutter_UI_task1",
-          "stars": 1
-        },
-        {
-          "name": "taskProgressSoft",
-          "description": "Flutter task management application with progress tracking features.",
-          "technologies": ["Flutter", "Dart"],
-          "github_url": "https://github.com/yhabbeh/taskProgressSoft",
-          "stars": 0
         }
       ]
     },
@@ -220,13 +192,6 @@
       "title": "Web & Tools",
       "projects": [
         {
-          "name": "audit_project",
-          "description": "Audit Committee Management System — a production-ready SPA for managing audit operations with role-based access, meeting/decision CRUD, Word report generation, and Claude AI integration.",
-          "technologies": ["JavaScript", "HTML", "CSS", "Claude AI", "Google Sheets"],
-          "github_url": "https://github.com/yhabbeh/audit_project",
-          "stars": 0
-        },
-        {
           "name": "Water_Metric_Steps",
           "description": "Interactive water intake tracker with step-based goal tracking and visual progress indicators.",
           "technologies": ["CSS", "HTML", "JavaScript"],
@@ -238,7 +203,7 @@
           "description": "JavaScript-based library inventory management system.",
           "technologies": ["JavaScript", "HTML", "CSS"],
           "github_url": "https://github.com/yhabbeh/library-inventory",
-          "stars": 0
+          "stars": 1
         }
       ]
     }
