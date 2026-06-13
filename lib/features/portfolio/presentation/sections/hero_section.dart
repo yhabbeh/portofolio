@@ -66,9 +66,6 @@ class _HeroSectionState extends State<HeroSection>
     final gradientColors =
         themeExt?.gradientColors ??
         [theme.colorScheme.primary, theme.colorScheme.secondary];
-    // final cardBg =
-    //     themeExt?.cardBackground ?? theme.cardTheme.color ?? Colors.white;
-    // final shadowColor = themeExt?.shadow ?? Colors.black.withAlpha(20);
 
     final bool isWide = MediaQuery.of(context).size.width >= 900;
 
@@ -78,18 +75,10 @@ class _HeroSectionState extends State<HeroSection>
         AnimatedBuilder(
           animation: _gradientController,
           builder: (context, _) {
-            final value = sin(_gradientController.value * 2 * pi) * 0.3;
-            return ShaderMask(
-              shaderCallback: (bounds) => LinearGradient(
-                colors: gradientColors,
-                begin: Alignment(-1 + value, 0),
-                end: Alignment(1 + value, 0),
-              ).createShader(bounds),
-              child: Text(
-                widget.headline,
-                style: theme.textTheme.displayLarge?.copyWith(
-                  color: Colors.white,
-                ),
+            return Text(
+              widget.headline,
+              style: theme.textTheme.displayLarge?.copyWith(
+                color: gradientColors.first,
               ),
             );
           },
@@ -119,15 +108,18 @@ class _HeroSectionState extends State<HeroSection>
         ),
         if (isWide) ...[
           const SizedBox(height: 48),
-          SizedBox(
-            height: 240,
-            width: 320,
-            child: Lottie.network(
-              'https://assets5.lottiefiles.com/packages/lf20_iv4dsx3q.json',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-            ),
-          ),
+          // Center(
+          //   child: SizedBox(
+          //     height: 240,
+          //     width: 320,
+          //     child: Lottie.network(
+          //       'https://assets5.lottiefiles.com/packages/lf20_iv4dsx3q.json',
+          //       fit: BoxFit.contain,
+          //       errorBuilder: (context, error, stackTrace) =>
+          //           const SizedBox.shrink(),
+          //     ),
+          //   ),
+          // ),
         ],
       ],
     );
@@ -160,8 +152,10 @@ class _HeroSectionState extends State<HeroSection>
                 AnimatedBuilder(
                   animation: _floatingController,
                   builder: (context, _) {
-                    final scale = 1.0 + sin(_floatingController.value * 2 * pi) * 0.05;
-                    final opacity = 0.15 + sin(_floatingController.value * 2 * pi) * 0.05;
+                    final scale =
+                        1.0 + sin(_floatingController.value * 2 * pi) * 0.05;
+                    final opacity =
+                        0.15 + sin(_floatingController.value * 2 * pi) * 0.05;
                     return Transform.scale(
                       scale: scale,
                       child: Container(
@@ -171,8 +165,12 @@ class _HeroSectionState extends State<HeroSection>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              gradientColors.first.withAlpha((opacity * 255).round()),
-                              gradientColors.last.withAlpha((opacity * 0.4 * 255).round()),
+                              gradientColors.first.withAlpha(
+                                (opacity * 255).round(),
+                              ),
+                              gradientColors.last.withAlpha(
+                                (opacity * 0.4 * 255).round(),
+                              ),
                               Colors.transparent,
                             ],
                             stops: const [0.0, 0.6, 1.0],
@@ -304,14 +302,15 @@ class _OrbsPainter extends CustomPainter {
       final cy = size.height * orb.y + dy;
       final radius = orb.radius * (1 + sin(t * 2 * pi * 0.4 + orb.phase) * 0.1);
 
-      final Paint paint = Paint()..shader = RadialGradient(
-        colors: [
-          colors.first.withAlpha((orb.alpha * 255).round()),
-          colors.last.withAlpha((orb.alpha * 0.4 * 255).round()),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius));
+      final Paint paint = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            colors.first.withAlpha((orb.alpha * 255).round()),
+            colors.last.withAlpha((orb.alpha * 0.4 * 255).round()),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius));
 
       canvas.drawCircle(Offset(cx, cy), radius, paint);
     }

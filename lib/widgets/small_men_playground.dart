@@ -23,12 +23,16 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
   // Scoring
   int _playerScore = 0;
   int _aiScore = 0;
-  double _goalFlashTimer = 0.0; // counts down from 1.5 after a goal
+  double _goalFlashTimer = 0.0;
   String _goalMessage = '';
+  double _postGoalFreeze = 0.0; // physics pause after a goal
 
   // Challenge timer: 90 seconds
   double _challengeTimeLeft = 90.0;
   bool _gameOver = false;
+
+  // Ball rotation angle (visual)
+  double _ballAngle = 0.0;
 
   // Keyboard controls
   final FocusNode _focusNode = FocusNode();
@@ -52,49 +56,57 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
     _characters.clear();
 
     // Striker AI (Fast, eager)
-    _characters.add(_ToyCharacter(
-      id: 0,
-      x: 150,
-      y: 0,
-      vx: 80,
-      vy: 0,
-      baseSpeed: 95,
-      state: _ToyState.walking,
-    ));
+    _characters.add(
+      _ToyCharacter(
+        id: 0,
+        x: 150,
+        y: 0,
+        vx: 80,
+        vy: 0,
+        baseSpeed: 95,
+        state: _ToyState.walking,
+      ),
+    );
 
     // Midfielder AI (Balanced)
-    _characters.add(_ToyCharacter(
-      id: 1,
-      x: 450,
-      y: 0,
-      vx: 60,
-      vy: 0,
-      baseSpeed: 75,
-      state: _ToyState.walking,
-    ));
+    _characters.add(
+      _ToyCharacter(
+        id: 1,
+        x: 450,
+        y: 0,
+        vx: 60,
+        vy: 0,
+        baseSpeed: 75,
+        state: _ToyState.walking,
+      ),
+    );
 
     // Defender AI (Slower)
-    _characters.add(_ToyCharacter(
-      id: 2,
-      x: 750,
-      y: 0,
-      vx: 50,
-      vy: 0,
-      baseSpeed: 60,
-      state: _ToyState.walking,
-    ));
+    _characters.add(
+      _ToyCharacter(
+        id: 2,
+        x: 750,
+        y: 0,
+        vx: 50,
+        vy: 0,
+        baseSpeed: 60,
+        state: _ToyState.walking,
+      ),
+    );
 
     // Player Character (YOU – orange)
-    _characters.add(_ToyCharacter(
-      id: 99,
-      isPlayer: true,
-      x: 300,
-      y: 0,
-      vx: 0,
-      vy: 0,
-      baseSpeed: 90,
-      state: _ToyState.idle,
-    ));
+    _characters.add(
+      _ToyCharacter(
+        id: 99,
+        isPlayer: true,
+        x: 300,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        baseSpeed: 90,
+        state: _ToyState.idle,
+      ),
+    );
 
     // Ball starts in the centre
     _ball = _SoccerBall(
@@ -105,7 +117,7 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
     );
   }
 
-  /// Reset ball to centre after a goal.
+  /// Reset ball to centre and start a brief post-goal freeze.
   void _resetBall() {
     _ball = _SoccerBall(
       x: _width / 2,
@@ -113,6 +125,8 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
       vx: (_random.nextBool() ? 1 : -1) * 60.0,
       vy: 40,
     );
+    _ballAngle = 0.0;
+    _postGoalFreeze = 1.0; // 1 second physics pause
   }
 
   @override
@@ -138,10 +152,15 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
         }
       }
 
-      // ── Goal flash countdown ─────────────────────────────────────────────────
+      // ── Goal flash & post-goal freeze countdowns ─────────────────────────────
       if (_goalFlashTimer > 0) {
         _goalFlashTimer -= dt;
         if (_goalFlashTimer < 0) _goalFlashTimer = 0;
+      }
+      if (_postGoalFreeze > 0) {
+        _postGoalFreeze -= dt;
+        if (_postGoalFreeze < 0) _postGoalFreeze = 0;
+        return; // Skip all physics while frozen
       }
 
       if (_gameOver) return;
@@ -151,6 +170,9 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
         _ball!.vy += gravity * dt;
         _ball!.x += _ball!.vx * dt;
         _ball!.y += _ball!.vy * dt;
+
+        // Ball visual rotation based on horizontal speed
+        _ballAngle += _ball!.vx * dt * 0.15;
 
         // Ground bounce
         if (_ball!.y <= groundY) {
@@ -163,8 +185,7 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
           }
         }
 
-        // ── Goal detection ───────────────────────────────────────────────────
-        // Left goal = AI scores | Right goal = Player scores
+        // ── Goal detection (early return prevents double-trigger) ─────────────
         final double leftGoalX = _kGoalWidth;
         final double rightGoalX = _width - _kGoalWidth;
 
@@ -173,22 +194,13 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
           _goalMessage = 'AI SCORES! 😈';
           _goalFlashTimer = 1.8;
           _resetBall();
+          return; // Exit this frame — ball is already reset
         } else if (_ball!.x >= rightGoalX) {
           _playerScore++;
           _goalMessage = 'GOAL! 🎉';
           _goalFlashTimer = 1.8;
           _resetBall();
-        }
-
-        // Wall bounce (only for non-goal hits — already handled above)
-        if (_ball != null) {
-          if (_ball!.x <= leftGoalX) {
-            _ball!.x = leftGoalX;
-            _ball!.vx = -_ball!.vx * 0.8;
-          } else if (_ball!.x >= rightGoalX) {
-            _ball!.x = rightGoalX;
-            _ball!.vx = -_ball!.vx * 0.8;
-          }
+          return; // Exit this frame
         }
       }
 
@@ -263,14 +275,19 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
           }
         } else {
           // ── AI Behavior ────────────────────────────────────────────────────
-          if (c.actionTimer <= 0 && c.state != _ToyState.kicking) {
-            c.actionTimer = _random.nextDouble() * 2.5 + 1.5;
-            final r = _random.nextDouble();
-            if (r < 0.15 && !c.isJumping) {
-              c.state = _ToyState.idle;
-              c.vx = 0;
-            } else {
-              c.state = _ToyState.walking;
+          // id=2 is the dedicated goalkeeper — hugs the left goal
+          final bool isGoalkeeper = c.id == 2;
+
+          if (!isGoalkeeper) {
+            if (c.actionTimer <= 0 && c.state != _ToyState.kicking) {
+              c.actionTimer = _random.nextDouble() * 2.5 + 1.5;
+              final r = _random.nextDouble();
+              if (r < 0.15 && !c.isJumping) {
+                c.state = _ToyState.idle;
+                c.vx = 0;
+              } else {
+                c.state = _ToyState.walking;
+              }
             }
           }
 
@@ -278,72 +295,109 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
             final double distToBall = _ball!.x - c.x;
             final double distY = _ball!.y - c.y;
 
-            bool isChaser = true;
-            for (final other in _characters) {
-              if (other.id != c.id) {
-                final double otherDist = (other.x - _ball!.x).abs();
-                if (otherDist < distToBall.abs() &&
-                    (other.x - c.x).abs() > 30) {
-                  isChaser = false;
-                }
-              }
-            }
+            if (isGoalkeeper) {
+              // Goalkeeper: track ball's Y (height) and stay near left goal
+              final double goalKeeperX = _kGoalWidth + 22;
+              final double ballApproaching = _ball!.vx < 0 ? 1.0 : 0.5;
+              final double gkTargetX = (_ball!.x < _width * 0.4)
+                  ? goalKeeperX // Ball on our side — hold position
+                  : goalKeeperX + 15; // Ball far — slightly forward
 
-            if (isChaser) {
-              c.state = _ToyState.running;
-              c.vx = distToBall.sign * c.baseSpeed * 1.35;
-              if (c.vx > 5) c.faceLeft = false;
-              if (c.vx < -5) c.faceLeft = true;
-
-              if (distToBall.abs() < 24 && distY < 24) {
-                c.state = _ToyState.kicking;
-                c.kickTimer = 0.0;
-
-                // Try to pass to nearest teammate (or shoot toward left goal)
-                _ToyCharacter? target;
-                double minTargetDist = double.maxFinite;
-                for (final t in _characters) {
-                  if (t.id != c.id && !t.isPlayer) {
-                    final d = (t.x - c.x).abs();
-                    if (d < minTargetDist) {
-                      minTargetDist = d;
-                      target = t;
-                    }
-                  }
-                }
-
-                if (target != null && minTargetDist < _width * 0.4) {
-                  final double passDir = (target.x - c.x).sign;
-                  _ball!.vx = passDir * (190.0 + _random.nextDouble() * 50.0);
-                  _ball!.vy = _random.nextDouble() * 120.0 + 80.0;
-                } else {
-                  // AI shoots toward left goal
-                  _ball!.vx = -(200.0 + _random.nextDouble() * 60.0);
-                  _ball!.vy = _random.nextDouble() * 100 + 60;
-                }
-              } else if (distToBall.abs() < 32 &&
-                  _ball!.y > 22 &&
-                  _ball!.y < 65 &&
-                  !c.isJumping) {
-                c.isJumping = true;
-                c.vy = 240.0;
-                c.vx = distToBall.sign * 40;
-              }
-            } else {
-              final double targetX =
-                  c.id == 0
-                      ? _width * 0.25
-                      : (c.id == 1 ? _width * 0.5 : _width * 0.75);
-              final double distToTarget = targetX - c.x;
-              if (distToTarget.abs() > 40) {
+              final double gkDist = gkTargetX - c.x;
+              if (gkDist.abs() > 8) {
                 c.state = _ToyState.walking;
-                c.vx = distToTarget.sign * c.baseSpeed * 0.75;
+                c.vx = gkDist.sign * c.baseSpeed * ballApproaching;
+                c.faceLeft = c.vx < 0;
               } else {
                 c.state = _ToyState.idle;
                 c.vx = 0;
+                c.faceLeft = false;
               }
-              if (c.vx > 5) c.faceLeft = false;
-              if (c.vx < -5) c.faceLeft = true;
+
+              // GK intercepts ball if it gets very close
+              if (distToBall.abs() < 28 && distY < 28) {
+                c.state = _ToyState.kicking;
+                c.kickTimer = 0.0;
+                // Clear the ball away from goal
+                _ball!.vx = 180.0 + _random.nextDouble() * 60;
+                _ball!.vy = _random.nextDouble() * 100 + 60;
+              } else if (distToBall.abs() < 36 &&
+                  _ball!.y > 16 &&
+                  _ball!.y < 55 &&
+                  !c.isJumping) {
+                c.isJumping = true;
+                c.vy = 220.0;
+              }
+            } else {
+              // Regular AI chaser / support logic
+              bool isChaser = true;
+              for (final other in _characters) {
+                if (other.id != c.id && other.id != 2) {
+                  // Ignore GK
+                  final double otherDist = (other.x - _ball!.x).abs();
+                  if (otherDist < distToBall.abs() &&
+                      (other.x - c.x).abs() > 30) {
+                    isChaser = false;
+                  }
+                }
+              }
+
+              if (isChaser) {
+                c.state = _ToyState.running;
+                c.vx = distToBall.sign * c.baseSpeed * 1.35;
+                if (c.vx > 5) c.faceLeft = false;
+                if (c.vx < -5) c.faceLeft = true;
+
+                if (distToBall.abs() < 24 && distY < 24) {
+                  c.state = _ToyState.kicking;
+                  c.kickTimer = 0.0;
+
+                  // Pass to nearest non-GK teammate or shoot left
+                  _ToyCharacter? target;
+                  double minTargetDist = double.maxFinite;
+                  for (final t in _characters) {
+                    if (t.id != c.id && !t.isPlayer && t.id != 2) {
+                      final d = (t.x - c.x).abs();
+                      if (d < minTargetDist) {
+                        minTargetDist = d;
+                        target = t;
+                      }
+                    }
+                  }
+
+                  if (target != null && minTargetDist < _width * 0.4) {
+                    final double passDir = (target.x - c.x).sign;
+                    _ball!.vx = passDir * (190.0 + _random.nextDouble() * 50.0);
+                    _ball!.vy = _random.nextDouble() * 120.0 + 80.0;
+                  } else {
+                    // Shoot toward left goal
+                    _ball!.vx = -(200.0 + _random.nextDouble() * 60.0);
+                    _ball!.vy = _random.nextDouble() * 100 + 60;
+                  }
+                } else if (distToBall.abs() < 32 &&
+                    _ball!.y > 22 &&
+                    _ball!.y < 65 &&
+                    !c.isJumping) {
+                  c.isJumping = true;
+                  c.vy = 240.0;
+                  c.vx = distToBall.sign * 40;
+                }
+              } else {
+                // Support position
+                final double targetX = c.id == 0
+                    ? _width * 0.28
+                    : _width * 0.55;
+                final double distToTarget = targetX - c.x;
+                if (distToTarget.abs() > 40) {
+                  c.state = _ToyState.walking;
+                  c.vx = distToTarget.sign * c.baseSpeed * 0.75;
+                } else {
+                  c.state = _ToyState.idle;
+                  c.vx = 0;
+                }
+                if (c.vx > 5) c.faceLeft = false;
+                if (c.vx < -5) c.faceLeft = true;
+              }
             }
           }
         }
@@ -363,8 +417,7 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
 
         // Walk/run cycle timing
         if (c.state == _ToyState.running || c.state == _ToyState.walking) {
-          final double speedFactor =
-              c.state == _ToyState.running ? 16.0 : 9.0;
+          final double speedFactor = c.state == _ToyState.running ? 16.0 : 9.0;
           c.runTime += dt * (c.vx.abs() / c.baseSpeed) * speedFactor;
         } else {
           c.runTime += dt * 2.0;
@@ -403,17 +456,16 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final Color figureColor =
-        isDark
-            ? theme.colorScheme.primary.withAlpha(210)
-            : theme.colorScheme.primary.withAlpha(230);
-    final Color ballColor =
-        isDark ? Colors.white.withAlpha(230) : Colors.black.withAlpha(200);
+    final Color figureColor = isDark
+        ? theme.colorScheme.primary.withAlpha(210)
+        : theme.colorScheme.primary.withAlpha(230);
+    final Color ballColor = isDark
+        ? Colors.white.withAlpha(230)
+        : Colors.black.withAlpha(200);
 
     final int minutes = (_challengeTimeLeft / 60).floor();
     final int seconds = (_challengeTimeLeft % 60).ceil();
-    final String timerLabel =
-        '$minutes:${seconds.toString().padLeft(2, '0')}';
+    final String timerLabel = '$minutes:${seconds.toString().padLeft(2, '0')}';
     final bool timerWarning = _challengeTimeLeft <= 15;
 
     return Column(
@@ -442,68 +494,62 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        _gameOver
-                            ? Colors.green.withAlpha(30)
-                            : timerWarning
-                            ? Colors.red.withAlpha(30)
-                            : theme.colorScheme.primary.withAlpha(20),
+                    color: _gameOver
+                        ? Colors.green.withAlpha(30)
+                        : timerWarning
+                        ? Colors.red.withAlpha(30)
+                        : theme.colorScheme.primary.withAlpha(20),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color:
-                          _gameOver
-                              ? Colors.green
-                              : timerWarning
-                              ? Colors.red
-                              : theme.colorScheme.primary.withAlpha(80),
+                      color: _gameOver
+                          ? Colors.green
+                          : timerWarning
+                          ? Colors.red
+                          : theme.colorScheme.primary.withAlpha(80),
                       width: 1.0,
                     ),
                   ),
-                  child:
-                      _gameOver
-                          ? Text(
-                            _playerScore > _aiScore
-                                ? '🏆 YOU WIN!'
+                  child: _gameOver
+                      ? Text(
+                          _playerScore > _aiScore
+                              ? '🏆 YOU WIN!'
+                              : _playerScore < _aiScore
+                              ? '😭 AI WINS'
+                              : '🤝 DRAW',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: _playerScore > _aiScore
+                                ? Colors.green
                                 : _playerScore < _aiScore
-                                ? '😭 AI WINS'
-                                : '🤝 DRAW',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  _playerScore > _aiScore
-                                      ? Colors.green
-                                      : _playerScore < _aiScore
-                                      ? Colors.red
-                                      : theme.colorScheme.primary,
-                            ),
-                          )
-                          : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.timer_outlined,
-                                size: 11,
-                                color:
-                                    timerWarning
-                                        ? Colors.red
-                                        : theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                timerLabel,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'monospace',
-                                  color:
-                                      timerWarning
-                                          ? Colors.red
-                                          : theme.colorScheme.primary,
-                                ),
-                              ),
-                            ],
+                                ? Colors.red
+                                : theme.colorScheme.primary,
                           ),
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.timer_outlined,
+                              size: 11,
+                              color: timerWarning
+                                  ? Colors.red
+                                  : theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              timerLabel,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace',
+                                color: timerWarning
+                                    ? Colors.red
+                                    : theme.colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
               // AI score
@@ -567,10 +613,12 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
                           painter: _PlaygroundPainter(
                             characters: _characters,
                             ball: _ball,
+                            ballAngle: _ballAngle,
                             figureColor: figureColor,
                             ballColor: ballColor,
-                            groundColor:
-                                theme.colorScheme.primary.withAlpha(120),
+                            groundColor: theme.colorScheme.primary.withAlpha(
+                              120,
+                            ),
                             isDark: isDark,
                             goalWidth: _kGoalWidth,
                           ),
@@ -590,10 +638,9 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w900,
-                                    color:
-                                        _goalMessage.contains('AI')
-                                            ? Colors.red
-                                            : Colors.orange,
+                                    color: _goalMessage.contains('AI')
+                                        ? Colors.red
+                                        : Colors.orange,
                                     shadows: [
                                       Shadow(
                                         color: Colors.black.withAlpha(120),
@@ -755,6 +802,7 @@ class _SoccerBall {
 class _PlaygroundPainter extends CustomPainter {
   final List<_ToyCharacter> characters;
   final _SoccerBall? ball;
+  final double ballAngle;
   final Color figureColor;
   final Color ballColor;
   final Color groundColor;
@@ -764,6 +812,7 @@ class _PlaygroundPainter extends CustomPainter {
   _PlaygroundPainter({
     required this.characters,
     required this.ball,
+    required this.ballAngle,
     required this.figureColor,
     required this.ballColor,
     required this.groundColor,
@@ -835,8 +884,9 @@ class _PlaygroundPainter extends CustomPainter {
     );
 
     // Right goal (Player scores here)
-    goalPaint.color =
-        (isDark ? Colors.greenAccent : Colors.green).withAlpha(180);
+    goalPaint.color = (isDark ? Colors.greenAccent : Colors.green).withAlpha(
+      180,
+    );
     canvas.drawLine(
       Offset(size.width - goalWidth, groundY - goalHeight),
       Offset(size.width - goalWidth, groundY),
@@ -858,25 +908,47 @@ class _PlaygroundPainter extends CustomPainter {
     );
 
     // Goal labels
-    _drawLabel(canvas, '←', Offset(goalWidth / 2, groundY - goalHeight - 6),
-        Colors.red.withAlpha(160), 8);
-    _drawLabel(canvas, '→',
-        Offset(size.width - goalWidth / 2, groundY - goalHeight - 6),
-        Colors.green.withAlpha(160), 8);
+    _drawLabel(
+      canvas,
+      '←',
+      Offset(goalWidth / 2, groundY - goalHeight - 6),
+      Colors.red.withAlpha(160),
+      8,
+    );
+    _drawLabel(
+      canvas,
+      '→',
+      Offset(size.width - goalWidth / 2, groundY - goalHeight - 6),
+      Colors.green.withAlpha(160),
+      8,
+    );
 
-    // 4. Ball
+    // 4. Ball (with spin rotation)
     if (ball != null) {
       final Offset ballPos = Offset(ball!.x, groundY - ball!.y - 6.0);
+      // Shadow
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(ballPos.dx, groundY - 1),
+          width: 10 + (ball!.y * 0.06).clamp(0, 4),
+          height: 3.5,
+        ),
+        Paint()..color = Colors.black.withAlpha(isDark ? 40 : 25),
+      );
+      // Ball body
       canvas.drawCircle(ballPos, 6.0, Paint()..color = ballColor);
+      // Rotating pattern
+      canvas.save();
+      canvas.translate(ballPos.dx, ballPos.dy);
+      canvas.rotate(ballAngle);
       final Paint patternPaint = Paint()
         ..color = figureColor.withAlpha(150)
         ..strokeWidth = 1.0
         ..style = PaintingStyle.stroke;
-      canvas.drawCircle(ballPos, 3.5, patternPaint);
-      canvas.drawLine(Offset(ballPos.dx - 6, ballPos.dy),
-          Offset(ballPos.dx + 6, ballPos.dy), patternPaint);
-      canvas.drawLine(Offset(ballPos.dx, ballPos.dy - 6),
-          Offset(ballPos.dx, ballPos.dy + 6), patternPaint);
+      canvas.drawCircle(Offset.zero, 3.5, patternPaint);
+      canvas.drawLine(const Offset(-6, 0), const Offset(6, 0), patternPaint);
+      canvas.drawLine(const Offset(0, -6), const Offset(0, 6), patternPaint);
+      canvas.restore();
     }
 
     // 5. Procedural Characters
@@ -885,10 +957,9 @@ class _PlaygroundPainter extends CustomPainter {
       canvas.translate(c.x, groundY - c.y - 12.0);
       if (c.faceLeft) canvas.scale(-1.0, 1.0);
 
-      final Color characterColor =
-          c.isPlayer
-              ? (isDark ? Colors.orangeAccent : Colors.orange.shade700)
-              : figureColor;
+      final Color characterColor = c.isPlayer
+          ? (isDark ? Colors.orangeAccent : Colors.orange.shade700)
+          : figureColor;
 
       final Paint limbPaint = Paint()
         ..color = characterColor
@@ -904,8 +975,15 @@ class _PlaygroundPainter extends CustomPainter {
         canvas.save();
         canvas.translate(0, -25.0);
         if (c.faceLeft) canvas.scale(-1.0, 1.0);
-        _drawLabel(canvas, 'YOU', Offset.zero, characterColor, 8,
-            bold: true, centered: true);
+        _drawLabel(
+          canvas,
+          'YOU',
+          Offset.zero,
+          characterColor,
+          8,
+          bold: true,
+          centered: true,
+        );
         canvas.restore();
       }
 
@@ -962,21 +1040,27 @@ class _PlaygroundPainter extends CustomPainter {
       }
 
       // Torso
-      final Offset shoulder =
-          Offset(sin(torsoTilt) * torsoLen, -cos(torsoTilt) * torsoLen);
+      final Offset shoulder = Offset(
+        sin(torsoTilt) * torsoLen,
+        -cos(torsoTilt) * torsoLen,
+      );
       canvas.drawLine(Offset.zero, shoulder, limbPaint);
 
       // Head
-      final Offset neck = shoulder +
-          Offset(sin(torsoTilt + headTilt) * 2.0,
-              -cos(torsoTilt + headTilt) * 2.0);
+      final Offset neck =
+          shoulder +
+          Offset(
+            sin(torsoTilt + headTilt) * 2.0,
+            -cos(torsoTilt + headTilt) * 2.0,
+          );
       canvas.drawCircle(neck - const Offset(0, 3.2), 3.2, headPaint);
 
       // Back arm
       final double sArm2Angle = arm2Angle + pi * 0.6;
       final Offset elbow2 =
           shoulder + Offset(sin(sArm2Angle) * 5.5, cos(sArm2Angle) * 5.5);
-      final Offset hand2 = elbow2 +
+      final Offset hand2 =
+          elbow2 +
           Offset(sin(sArm2Angle - 0.4) * 5.5, cos(sArm2Angle - 0.4) * 5.5);
       canvas.drawLine(shoulder, elbow2, limbPaint);
       canvas.drawLine(elbow2, hand2, limbPaint);
@@ -985,28 +1069,33 @@ class _PlaygroundPainter extends CustomPainter {
       final double sArm1Angle = arm1Angle - pi * 0.6;
       final Offset elbow1 =
           shoulder + Offset(sin(sArm1Angle) * 5.5, cos(sArm1Angle) * 5.5);
-      final Offset hand1 = elbow1 +
+      final Offset hand1 =
+          elbow1 +
           Offset(sin(sArm1Angle + 0.4) * 5.5, cos(sArm1Angle + 0.4) * 5.5);
       canvas.drawLine(shoulder, elbow1, limbPaint);
       canvas.drawLine(elbow1, hand1, limbPaint);
 
       // Back leg
       final double sLeg2Angle = leg2Angle + pi * 0.95;
-      final Offset knee2 =
-          Offset(sin(sLeg2Angle) * 6.5, cos(sLeg2Angle) * 6.5);
-      final Offset foot2 = knee2 +
-          Offset(sin(sLeg2Angle - knee2Flex) * 6.0,
-              cos(sLeg2Angle - knee2Flex) * 6.0);
+      final Offset knee2 = Offset(sin(sLeg2Angle) * 6.5, cos(sLeg2Angle) * 6.5);
+      final Offset foot2 =
+          knee2 +
+          Offset(
+            sin(sLeg2Angle - knee2Flex) * 6.0,
+            cos(sLeg2Angle - knee2Flex) * 6.0,
+          );
       canvas.drawLine(Offset.zero, knee2, limbPaint);
       canvas.drawLine(knee2, foot2, limbPaint);
 
       // Front leg
       final double sLeg1Angle = leg1Angle + pi * 0.95;
-      final Offset knee1 =
-          Offset(sin(sLeg1Angle) * 6.5, cos(sLeg1Angle) * 6.5);
-      final Offset foot1 = knee1 +
-          Offset(sin(sLeg1Angle - knee1Flex) * 6.0,
-              cos(sLeg1Angle - knee1Flex) * 6.0);
+      final Offset knee1 = Offset(sin(sLeg1Angle) * 6.5, cos(sLeg1Angle) * 6.5);
+      final Offset foot1 =
+          knee1 +
+          Offset(
+            sin(sLeg1Angle - knee1Flex) * 6.0,
+            cos(sLeg1Angle - knee1Flex) * 6.0,
+          );
       canvas.drawLine(Offset.zero, knee1, limbPaint);
       canvas.drawLine(knee1, foot1, limbPaint);
 
