@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/section_title.dart';
-import '../core/constants.dart';
+import '../../../../widgets/section_title.dart';
 
 class AwardsSection extends StatelessWidget {
-  const AwardsSection({super.key});
+  final String awardTitle;
+
+  const AwardsSection({super.key, required this.awardTitle});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -24,15 +26,15 @@ class AwardsSection extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Row(
                 children: [
-                  const Icon(Icons.emoji_events, color: Color(0xFF1B3A8B), size: 28),
+                  Icon(Icons.emoji_events, color: theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      kAwardTitle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      awardTitle,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ],

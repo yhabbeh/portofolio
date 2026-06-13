@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import '../models/project_model.dart';
+import '../features/portfolio/domain/entities/project.dart';
 
 class ProjectCard extends StatelessWidget {
-  final ProjectModel project;
+  final Project project;
 
   const ProjectCard({super.key, required this.project});
 
@@ -71,7 +71,7 @@ class ProjectCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: colors.primary.withValues(alpha: 0.08),
+                            color: colors.primary.withAlpha(20),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(

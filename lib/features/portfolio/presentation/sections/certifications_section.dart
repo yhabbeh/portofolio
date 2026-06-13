@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../core/constants.dart';
-import '../widgets/section_title.dart';
+import '../../../../widgets/section_title.dart';
 
 class CertificationsSection extends StatelessWidget {
-  const CertificationsSection({super.key});
+  final String certificationTitle;
+
+  const CertificationsSection({super.key, required this.certificationTitle});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -24,15 +26,15 @@ class CertificationsSection extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Row(
                 children: [
-                  const Icon(Icons.verified, color: Color(0xFF1B3A8B), size: 28),
+                  Icon(Icons.verified, color: theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      kCertificationTitle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      certificationTitle,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ],

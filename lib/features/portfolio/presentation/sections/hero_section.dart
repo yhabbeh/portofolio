@@ -1,18 +1,28 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-import '../core/constants.dart';
-import '../widgets/primary_button.dart';
-import '../widgets/responsive_container.dart';
-import '../widgets/tilt_card.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../widgets/primary_button.dart';
+import '../../../../widgets/responsive_container.dart';
+import '../../../../widgets/tilt_card.dart';
 
 class HeroSection extends StatefulWidget {
+  final String headline;
+  final String subtitle;
+  final String name;
+  final String location;
+  final String profileImage;
   final VoidCallback onContactPressed;
   final VoidCallback onDownloadPressed;
   final double scrollOffset;
 
   const HeroSection({
     super.key,
+    required this.headline,
+    required this.subtitle,
+    required this.name,
+    required this.location,
+    required this.profileImage,
     required this.onContactPressed,
     required this.onDownloadPressed,
     this.scrollOffset = 0,
@@ -49,6 +59,12 @@ class _HeroSectionState extends State<HeroSection>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeExt = theme.extension<PortfolioThemeExtension>();
+    final gradientColors = themeExt?.gradientColors ?? [theme.colorScheme.primary, theme.colorScheme.secondary];
+    final cardBg = themeExt?.cardBackground ?? theme.cardTheme.color ?? Colors.white;
+    final shadowColor = themeExt?.shadow ?? Colors.black.withAlpha(20);
+
     final bool isWide = MediaQuery.of(context).size.width >= 900;
     final parallaxOffset = widget.scrollOffset * 0.15;
 
@@ -61,13 +77,13 @@ class _HeroSectionState extends State<HeroSection>
             final value = sin(_gradientController.value * 2 * pi) * 0.3;
             return ShaderMask(
               shaderCallback: (bounds) => LinearGradient(
-                colors: const [Color(0xFF1B3A8B), Color(0xFF2F5ED7)],
+                colors: gradientColors,
                 begin: Alignment(-1 + value, 0),
                 end: Alignment(1 + value, 0),
               ).createShader(bounds),
               child: Text(
-                kHeroHeadline,
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                widget.headline,
+                style: theme.textTheme.displayLarge?.copyWith(
                   color: Colors.white,
                 ),
               ),
@@ -75,7 +91,12 @@ class _HeroSectionState extends State<HeroSection>
           },
         ),
         const SizedBox(height: 24),
-        Text(kHeroSubtitle, style: Theme.of(context).textTheme.bodyLarge),
+        Text(
+          widget.subtitle,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: themeExt?.textSecondary,
+          ),
+        ),
         const SizedBox(height: 32),
         Wrap(
           spacing: 16,
@@ -110,8 +131,8 @@ class _HeroSectionState extends State<HeroSection>
               borderRadius: BorderRadius.circular(40),
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF2F5ED7).withValues(alpha: opacity),
-                  const Color(0xFF1B3A8B).withValues(alpha: opacity * 0.4),
+                  gradientColors.first.withAlpha((opacity * 255).round()),
+                  gradientColors.last.withAlpha((opacity * 0.4 * 255).round()),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 0.6, 1.0],
@@ -136,12 +157,12 @@ class _HeroSectionState extends State<HeroSection>
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(32),
-            color: Colors.white,
-            boxShadow: const [
+            color: cardBg,
+            boxShadow: [
               BoxShadow(
-                color: Color(0x14000000),
+                color: shadowColor,
                 blurRadius: 28,
-                offset: Offset(0, 12),
+                offset: const Offset(0, 12),
               ),
             ],
           ),
@@ -152,16 +173,33 @@ class _HeroSectionState extends State<HeroSection>
               ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: Image.asset(
-                  kProfileImage,
+                  widget.profileImage,
                   height: isWide ? 320 : 260,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: isWide ? 320 : 260,
+                      color: theme.colorScheme.primary.withAlpha(30),
+                      child: Icon(Icons.person, size: 64, color: theme.colorScheme.primary),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 24),
-              Text(kName, style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                widget.name,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
               const SizedBox(height: 8),
-              Text(kLocation, style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                widget.location,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: themeExt?.textSecondary,
+                ),
+              ),
             ],
           ),
         ),

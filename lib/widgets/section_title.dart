@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_theme.dart';
+
 class SectionTitle extends StatefulWidget {
   final String title;
   final String subtitle;
@@ -21,6 +23,10 @@ class _SectionTitleState extends State<SectionTitle> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeExt = theme.extension<PortfolioThemeExtension>();
+    final gradientColors = themeExt?.gradientColors ?? [theme.colorScheme.primary, theme.colorScheme.secondary];
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -35,17 +41,20 @@ class _SectionTitleState extends State<SectionTitle> {
               children: [
                 AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 250),
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                        color: _hovered
-                            ? Theme.of(context).colorScheme.primary
-                            : null,
-                      ),
+                  style: theme.textTheme.titleLarge!.copyWith(
+                    color: _hovered
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
+                  ),
                   child: widget.gradient
                       ? ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Color(0xFF1B3A8B), Color(0xFF2F5ED7)],
+                          shaderCallback: (bounds) => LinearGradient(
+                            colors: gradientColors,
                           ).createShader(bounds),
-                          child: Text(widget.title),
+                          child: Text(
+                            widget.title,
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         )
                       : Text(widget.title),
                 ),
@@ -58,7 +67,9 @@ class _SectionTitleState extends State<SectionTitle> {
                   ),
                   child: Text(
                     widget.subtitle,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: themeExt?.textSecondary,
+                    ),
                   ),
                 ),
               ],

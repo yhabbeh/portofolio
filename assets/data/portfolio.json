@@ -1,0 +1,248 @@
+{
+  "name": "Yousef Habbeh",
+  "location": "Amman, Jordan",
+  "email": "yousef.habbeh@hotmail.com",
+  "phone": "+962781543080",
+  "linkedin_url": "https://www.linkedin.com/in/yhabbeh/",
+  "github_url": "https://github.com/yhabbeh",
+  "cv_asset": "assets/pdf/Yousef_Habbeh_CV.pdf",
+  "profile_image": "assets/images/profile_placeholder.png",
+  "hero_headline": "Mobile Software Engineer | Flutter Developer | AI Engineer",
+  "hero_subtitle": "Building high-performance mobile applications with Flutter and integrating intelligent solutions through Machine Learning. Focused on clean architecture, scalable systems, and modern UX.",
+  "about_description": "Mobile Software Engineer and AI Specialist with 6+ years of professional experience.\n\nSpecialized in Flutter, Dart, and Machine Learning, with experience developing scalable mobile applications, intelligent systems, and data-driven solutions.\n\nPassionate about clean code, scalable architecture, problem solving, and combining mobile technology with AI to create impactful digital products.",
+  "about_highlights": [
+    "Flutter Development",
+    "AI / Machine Learning",
+    "Clean Architecture",
+    "Mobile Systems"
+  ],
+  "experiences": [
+    {
+      "title": "Mobile Developer",
+      "company": "Futeric",
+      "period": "May 2025 — Present",
+      "location": "Amman, Jordan",
+      "responsibilities": [
+        "Mobile application design and execution with Flutter.",
+        "Feature delivery, UI implementation, and performance optimization.",
+        "Collaborated with product and QA teams for stable releases."
+      ]
+    },
+    {
+      "title": "Mobile Developer",
+      "company": "Integrated Technology Group (ITG)",
+      "period": "March 2022 — May 2025",
+      "location": "Amman, Jordan",
+      "responsibilities": [
+        "Flutter application development and REST API integration.",
+        "Delivered polished user interfaces and technical solutions.",
+        "Shared product ownership and collaborated with cross-functional teams."
+      ]
+    },
+    {
+      "title": "Machine Learning Mentor",
+      "company": "AI For SHAI",
+      "period": "Jan 2022 — Jun 2023",
+      "location": "Remote",
+      "responsibilities": [
+        "Mentored students on ML fundamentals and model evaluation.",
+        "Led workshops and built real-world dataset solutions.",
+        "Supported practical machine learning and data science projects."
+      ]
+    },
+    {
+      "title": "Deep Learning & Machine Learning Intern",
+      "company": "AI For SHAI",
+      "period": "Jan 2021 — Jan 2022",
+      "location": "Remote",
+      "responsibilities": [
+        "Built TensorFlow and Keras models for computer vision and regression.",
+        "Worked on classification and Kaggle project workflows.",
+        "Explored neural network performance and training best practices."
+      ]
+    },
+    {
+      "title": "Core Curriculum Student",
+      "company": "42 Amman",
+      "period": "Sep 2024 — Apr 2025",
+      "location": "Amman, Jordan",
+      "responsibilities": [
+        "Completed intensive programming and problem-solving curriculum."
+      ]
+    },
+    {
+      "title": "Fellow",
+      "company": "Correlation One",
+      "period": "Aug 2024 — Apr 2025",
+      "location": "Remote",
+      "responsibilities": [
+        "Participated in a data and AI fellowship focused on practical skills."
+      ]
+    },
+    {
+      "title": "Service Management Analyst",
+      "company": "Electronic Health Solutions",
+      "period": "Jan 2022 — Apr 2022",
+      "location": "Amman, Jordan",
+      "responsibilities": [
+        "Supported service management processes for healthcare operations."
+      ]
+    },
+    {
+      "title": "System Implementor",
+      "company": "GoClinic",
+      "period": "Nov 2021 — Jan 2022",
+      "location": "Amman, Jordan",
+      "responsibilities": [
+        "Implemented system workflows and supported deployment processes."
+      ]
+    },
+    {
+      "title": "Academic Team Leader",
+      "company": "Ahl Al Hemmeh",
+      "period": "Jan 2020 — Sep 2021",
+      "location": "Amman, Jordan",
+      "responsibilities": [
+        "Led student teams for academic and community technology programs."
+      ]
+    }
+  ],
+  "skill_categories": [
+    {
+      "title": "Mobile Development",
+      "skills": ["Flutter", "Dart", "Bloc", "Cubit", "REST APIs", "JSON"]
+    },
+    {
+      "title": "AI & Data Science",
+      "skills": [
+        "Machine Learning",
+        "Deep Learning",
+        "TensorFlow",
+        "Keras",
+        "Statistical Modeling"
+      ]
+    },
+    {
+      "title": "Programming",
+      "skills": ["Python", "SQL", "MATLAB"]
+    },
+    {
+      "title": "Big Data",
+      "skills": ["Hadoop", "Spark", "Hive", "MapReduce"]
+    },
+    {
+      "title": "Tools",
+      "skills": ["Android Studio", "VS Code", "Jupyter", "Google Colab"]
+    }
+  ],
+  "project_categories": [
+    {
+      "title": "Mobile Applications",
+      "projects": [
+        {
+          "name": "drugmngqwn",
+          "description": "Home Pharmacy Management & Medication Reminders. An offline-first Android app built with Clean Architecture and BLoC/Cubit.",
+          "technologies": ["Flutter", "Dart", "BLoC", "Clean Architecture", "SQLite"],
+          "github_url": "https://github.com/yhabbeh/drugmngqwn",
+          "stars": 0
+        },
+        {
+          "name": "drug_reminder",
+          "description": "Medication management app with scheduling, dose reminders, and contact integration.",
+          "technologies": ["Flutter", "Dart", "BLoC", "Notifications"],
+          "github_url": "https://github.com/yhabbeh/drug_reminder",
+          "stars": 0
+        },
+        {
+          "name": "dental-appointment-mobile",
+          "description": "Professional dental practice management app with Firebase authentication, multi-language support, biometric auth, and patient management.",
+          "technologies": ["Flutter", "Firebase", "Localization", "Biometrics"],
+          "github_url": "https://github.com/yhabbeh/dental-appointment-mobile",
+          "stars": 1
+        },
+        {
+          "name": "al-mathurat",
+          "description": "Islamic morning and evening adhkar (remembrances) mobile application.",
+          "technologies": ["Flutter", "Dart"],
+          "github_url": "https://github.com/yhabbeh/al-mathurat",
+          "stars": 1
+        },
+        {
+          "name": "Neuro_Stem",
+          "description": "Flutter-based mobile application exploring neurotechnology concepts.",
+          "technologies": ["Flutter", "Dart"],
+          "github_url": "https://github.com/yhabbeh/Neuro_Stem",
+          "stars": 2
+        },
+        {
+          "name": "Clean_architecture",
+          "description": "Flutter project demonstrating clean architecture principles with domain, data, and presentation layer separation.",
+          "technologies": ["Flutter", "Dart", "Clean Architecture"],
+          "github_url": "https://github.com/yhabbeh/Clean_architecture",
+          "stars": 1
+        },
+        {
+          "name": "Flutter_UI_task1",
+          "description": "Flutter UI exploration project showcasing custom widget design and layout techniques.",
+          "technologies": ["Flutter", "Dart", "UI/UX"],
+          "github_url": "https://github.com/yhabbeh/Flutter_UI_task1",
+          "stars": 1
+        },
+        {
+          "name": "taskProgressSoft",
+          "description": "Flutter task management application with progress tracking features.",
+          "technologies": ["Flutter", "Dart"],
+          "github_url": "https://github.com/yhabbeh/taskProgressSoft",
+          "stars": 0
+        }
+      ]
+    },
+    {
+      "title": "AI & Machine Learning",
+      "projects": [
+        {
+          "name": "Diamonds-price-prediction",
+          "description": "Machine learning model to predict diamond prices based on attributes like carat, cut, color, and clarity.",
+          "technologies": ["Python", "Jupyter", "ML", "Data Analysis"],
+          "github_url": "https://github.com/yhabbeh/Diamonds-price-prediction",
+          "stars": 1
+        },
+        {
+          "name": "autism_efficient",
+          "description": "Flask-based API for classifying images as potentially indicating autism using a pre-trained deep learning model.",
+          "technologies": ["Python", "Flask", "TensorFlow", "Keras", "Deep Learning"],
+          "github_url": "https://github.com/yhabbeh/autism_efficient",
+          "stars": 1
+        }
+      ]
+    },
+    {
+      "title": "Web & Tools",
+      "projects": [
+        {
+          "name": "audit_project",
+          "description": "Audit Committee Management System — a production-ready SPA for managing audit operations with role-based access, meeting/decision CRUD, Word report generation, and Claude AI integration.",
+          "technologies": ["JavaScript", "HTML", "CSS", "Claude AI", "Google Sheets"],
+          "github_url": "https://github.com/yhabbeh/audit_project",
+          "stars": 0
+        },
+        {
+          "name": "Water_Metric_Steps",
+          "description": "Interactive water intake tracker with step-based goal tracking and visual progress indicators.",
+          "technologies": ["CSS", "HTML", "JavaScript"],
+          "github_url": "https://github.com/yhabbeh/Water_Metric_Steps",
+          "stars": 1
+        },
+        {
+          "name": "library-inventory",
+          "description": "JavaScript-based library inventory management system.",
+          "technologies": ["JavaScript", "HTML", "CSS"],
+          "github_url": "https://github.com/yhabbeh/library-inventory",
+          "stars": 0
+        }
+      ]
+    }
+  ],
+  "certification_title": "Tech for Jobs Professional Development for Tech Roles — High Performing Certificate",
+  "award_title": "🏆 3rd Place — HAAC (Hakeem Annual Academy Competition)"
+}

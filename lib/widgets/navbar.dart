@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:ui' show ImageFilter;
+
+import '../../features/theme/presentation/bloc/theme_cubit.dart';
+import '../../features/theme/presentation/bloc/theme_state.dart';
 
 class NavigationItem {
   final String title;
@@ -53,12 +57,14 @@ class _NavbarState extends State<Navbar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isScrolled = _scrollOffset > 20;
+
     return AppBar(
       elevation: 0,
       backgroundColor: isScrolled
-          ? const Color(0xFFF4F7FF).withValues(alpha: 0.85)
-          : const Color(0xFFF4F7FF),
+          ? theme.scaffoldBackgroundColor.withAlpha((0.85 * 255).round())
+          : theme.scaffoldBackgroundColor,
       flexibleSpace: isScrolled
           ? ClipRect(
               child: BackdropFilter(
@@ -69,7 +75,9 @@ class _NavbarState extends State<Navbar> {
           : null,
       title: Text(
         'Yousef Habbeh',
-        style: Theme.of(context).textTheme.titleLarge,
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w800,
+        ),
       ),
       leading: widget.isMobile
           ? IconButton(
@@ -77,21 +85,39 @@ class _NavbarState extends State<Navbar> {
               onPressed: widget.onMenuTap,
             )
           : null,
-      actions: widget.isMobile
-          ? null
-          : widget.items
-              .map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Center(
-                    child: NavbarButton(
-                      title: item.title,
-                      onTap: item.onTap,
-                    ),
-                  ),
+      actions: [
+        if (!widget.isMobile)
+          ...widget.items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                child: NavbarButton(
+                  title: item.title,
+                  onTap: item.onTap,
                 ),
-              )
-              .toList(),
+              ),
+            ),
+          ),
+        const SizedBox(width: 8),
+        BlocBuilder<ThemeCubit, ThemeState>(
+          builder: (context, state) {
+            final isDark = state.themeMode == ThemeMode.dark ||
+                (state.themeMode == ThemeMode.system &&
+                    MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+            return IconButton(
+              icon: Icon(
+                isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                color: theme.colorScheme.primary,
+              ),
+              tooltip: isDark ? 'Toggle Light Mode' : 'Toggle Dark Mode',
+              onPressed: () {
+                context.read<ThemeCubit>().toggleTheme(!isDark);
+              },
+            );
+          },
+        ),
+        const SizedBox(width: 16),
+      ],
     );
   }
 }
@@ -136,7 +162,7 @@ class _NavbarButtonState extends State<NavbarButton> {
                 AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 200),
                   style: TextStyle(
-                    color: _hovered ? colors.primary : colors.onSurface.withValues(alpha: 0.75),
+                    color: _hovered ? colors.primary : colors.onSurface.withAlpha((0.75 * 255).round()),
                     fontSize: 15,
                     fontWeight: _hovered ? FontWeight.w700 : FontWeight.w500,
                     fontFamily: textStyle?.fontFamily,

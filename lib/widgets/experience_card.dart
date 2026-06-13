@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
-import '../models/experience_model.dart';
+import '../features/portfolio/domain/entities/experience.dart';
 
 class ExperienceCard extends StatelessWidget {
-  final ExperienceModel experience;
+  final Experience experience;
 
   const ExperienceCard({super.key, required this.experience});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SizedBox(
       width: 340,
       child: Card(
@@ -34,7 +36,8 @@ class ExperienceCard extends StatelessWidget {
               Text(
                 experience.location,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 12),
@@ -44,15 +47,15 @@ class ExperienceCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(top: 5, right: 6),
-                        child: Icon(Icons.circle, size: 5, color: Color(0xFF1B3A8B)),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5, right: 6),
+                        child: Icon(Icons.circle, size: 5, color: colorScheme.primary),
                       ),
                       Expanded(
                         child: Text(
                           item,
                           style: Theme.of(context).textTheme.bodySmall,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

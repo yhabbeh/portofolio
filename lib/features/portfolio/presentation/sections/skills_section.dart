@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../core/constants.dart';
-import '../widgets/section_title.dart';
-import '../widgets/skill_chip.dart';
+import '../../../../widgets/section_title.dart';
+import '../../../../widgets/skill_chip.dart';
+import '../../domain/entities/skill.dart';
 
 class SkillsSection extends StatelessWidget {
-  const SkillsSection({super.key});
+  final List<SkillCategory> skillCategories;
+
+  const SkillsSection({super.key, required this.skillCategories});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class SkillsSection extends StatelessWidget {
         Wrap(
           spacing: 16,
           runSpacing: 16,
-          children: kSkillCategories.map(
+          children: skillCategories.map(
             (category) => SizedBox(
               width: 280,
               child: Card(

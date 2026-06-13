@@ -1,6 +1,7 @@
-import '../models/experience_model.dart';
-import '../models/project_model.dart';
-import '../models/skill_model.dart';
+import 'package:portfolio_web/features/portfolio/data/models/experience_model.dart';
+import 'package:portfolio_web/features/portfolio/data/models/project_model.dart';
+import 'package:portfolio_web/features/portfolio/domain/entities/project.dart';
+import 'package:portfolio_web/features/portfolio/domain/entities/skill.dart';
 
 const String kName = 'Yousef Habbeh';
 const String kLocation = 'Amman, Jordan';
@@ -182,96 +183,123 @@ const List<SkillCategory> kSkillCategories = [
   ),
 ];
 
-const List<ProjectCategory> kProjectCategories = [
+final List<ProjectCategory> kProjectCategories = [
   ProjectCategory(
     title: 'Mobile Applications',
     projects: [
       ProjectModel(
-        name: 'drugmngqwn',
-        description: 'Home Pharmacy Management & Medication Reminders. An offline-first Android app built with Clean Architecture and BLoC/Cubit.',
-        technologies: ['Flutter', 'Dart', 'BLoC', 'Clean Architecture', 'SQLite'],
-        githubUrl: 'https://github.com/yhabbeh/drugmngqwn',
+        name: 'Drug Managment',
+        description:
+            'Home Pharmacy Management & Medication Reminders. An offline-first Android app built with Clean Architecture and BLoC/Cubit.',
+        technologies: const [
+          'Flutter',
+          'Dart',
+          'BLoC',
+          'Clean Architecture',
+          'SQLite',
+        ],
+        githubUrl: 'https://github.com/yhabbeh/drugMNG',
+        stars: 1,
       ),
-      ProjectModel(
-        name: 'drug_reminder',
-        description: 'Medication management app with scheduling, dose reminders, and contact integration.',
-        technologies: ['Flutter', 'Dart', 'BLoC', 'Notifications'],
-        githubUrl: 'https://github.com/yhabbeh/drug_reminder',
-      ),
-      ProjectModel(
+      // ProjectModel(
+      //   name: 'drug_reminder',
+      //   description: 'Medication management app with scheduling, dose reminders, and contact integration.',
+      //   technologies: ['Flutter', 'Dart', 'BLoC', 'Notifications'],
+      //   githubUrl: 'https://github.com/yhabbeh/drug_reminder',
+      // ),
+      const ProjectModel(
         name: 'dental-appointment-mobile',
-        description: 'Professional dental practice management app with Firebase authentication, multi-language support, biometric auth, and patient management.',
+        description:
+            'Professional dental practice management app with Firebase authentication, multi-language support, biometric auth, and patient management.',
         technologies: ['Flutter', 'Firebase', 'Localization', 'Biometrics'],
         githubUrl: 'https://github.com/yhabbeh/dental-appointment-mobile',
         stars: 1,
       ),
-      ProjectModel(
+      const ProjectModel(
         name: 'al-mathurat',
-        description: 'Islamic morning and evening adhkar (remembrances) mobile application.',
+        description:
+            'Islamic morning and evening adhkar (remembrances) mobile application.',
         technologies: ['Flutter', 'Dart'],
         githubUrl: 'https://github.com/yhabbeh/al-mathurat',
         stars: 1,
       ),
-      ProjectModel(
+      const ProjectModel(
         name: 'Neuro_Stem',
-        description: 'Flutter-based mobile application exploring neurotechnology concepts.',
+        description:
+            'Flutter-based mobile application exploring neurotechnology concepts.',
         technologies: ['Flutter', 'Dart'],
         githubUrl: 'https://github.com/yhabbeh/Neuro_Stem',
         stars: 2,
       ),
-      ProjectModel(
-        name: 'Clean_architecture',
-        description: 'Flutter project demonstrating clean architecture principles with domain, data, and presentation layer separation.',
-        technologies: ['Flutter', 'Dart', 'Clean Architecture'],
-        githubUrl: 'https://github.com/yhabbeh/Clean_architecture',
-        stars: 1,
-      ),
-      ProjectModel(
-        name: 'Flutter_UI_task1',
-        description: 'Flutter UI exploration project showcasing custom widget design and layout techniques.',
-        technologies: ['Flutter', 'Dart', 'UI/UX'],
-        githubUrl: 'https://github.com/yhabbeh/Flutter_UI_task1',
-        stars: 1,
-      ),
-      ProjectModel(
-        name: 'taskProgressSoft',
-        description: 'Flutter task management application with progress tracking features.',
-        technologies: ['Flutter', 'Dart'],
-        githubUrl: 'https://github.com/yhabbeh/taskProgressSoft',
-      ),
+      // ProjectModel(
+      //   name: 'Clean_architecture',
+      //   description: 'Flutter project demonstrating clean architecture principles with domain, data, and presentation layer separation.',
+      //   technologies: ['Flutter', 'Dart', 'Clean Architecture'],
+      //   githubUrl: 'https://github.com/yhabbeh/Clean_architecture',
+      //   stars: 1,
+      // ),
+      // ProjectModel(
+      //   name: 'Flutter_UI_task1',
+      //   description: 'Flutter UI exploration project showcasing custom widget design and layout techniques.',
+      //   technologies: ['Flutter', 'Dart', 'UI/UX'],
+      //   githubUrl: 'https://github.com/yhabbeh/Flutter_UI_task1',
+      //   stars: 1,
+      // ),
+      // ProjectModel(
+      //   name: 'taskProgressSoft',
+      //   description: 'Flutter task management application with progress tracking features.',
+      //   technologies: ['Flutter', 'Dart'],
+      //   githubUrl: 'https://github.com/yhabbeh/taskProgressSoft',
+      // ),
     ],
   ),
-  ProjectCategory(
+  const ProjectCategory(
     title: 'AI & Machine Learning',
     projects: [
       ProjectModel(
         name: 'Diamonds-price-prediction',
-        description: 'Machine learning model to predict diamond prices based on attributes like carat, cut, color, and clarity.',
+        description:
+            'Machine learning model to predict diamond prices based on attributes like carat, cut, color, and clarity.',
         technologies: ['Python', 'Jupyter', 'ML', 'Data Analysis'],
         githubUrl: 'https://github.com/yhabbeh/Diamonds-price-prediction',
         stars: 1,
       ),
       ProjectModel(
         name: 'autism_efficient',
-        description: 'Flask-based API for classifying images as potentially indicating autism using a pre-trained deep learning model.',
-        technologies: ['Python', 'Flask', 'TensorFlow', 'Keras', 'Deep Learning'],
+        description:
+            'Flask-based API for classifying images as potentially indicating autism using a pre-trained deep learning model.',
+        technologies: [
+          'Python',
+          'Flask',
+          'TensorFlow',
+          'Keras',
+          'Deep Learning',
+        ],
         githubUrl: 'https://github.com/yhabbeh/autism_efficient',
         stars: 1,
       ),
     ],
   ),
-  ProjectCategory(
+  const ProjectCategory(
     title: 'Web & Tools',
     projects: [
-      ProjectModel(
-        name: 'audit_project',
-        description: 'Audit Committee Management System — a production-ready SPA for managing audit operations with role-based access, meeting/decision CRUD, Word report generation, and Claude AI integration.',
-        technologies: ['JavaScript', 'HTML', 'CSS', 'Claude AI', 'Google Sheets'],
-        githubUrl: 'https://github.com/yhabbeh/audit_project',
-      ),
+      // ProjectModel(
+      //   name: 'audit_project',
+      //   description:
+      //       'Audit Committee Management System — a production-ready SPA for managing audit operations with role-based access, meeting/decision CRUD, Word report generation, and Claude AI integration.',
+      //   technologies: [
+      //     'JavaScript',
+      //     'HTML',
+      //     'CSS',
+      //     'Claude AI',
+      //     'Google Sheets',
+      //   ],
+      //   githubUrl: 'https://github.com/yhabbeh/audit_project',
+      // ),
       ProjectModel(
         name: 'Water_Metric_Steps',
-        description: 'Interactive water intake tracker with step-based goal tracking and visual progress indicators.',
+        description:
+            'Interactive water intake tracker with step-based goal tracking and visual progress indicators.',
         technologies: ['CSS', 'HTML', 'JavaScript'],
         githubUrl: 'https://github.com/yhabbeh/Water_Metric_Steps',
         stars: 1,
@@ -281,6 +309,7 @@ const List<ProjectCategory> kProjectCategories = [
         description: 'JavaScript-based library inventory management system.',
         technologies: ['JavaScript', 'HTML', 'CSS'],
         githubUrl: 'https://github.com/yhabbeh/library-inventory',
+        stars: 1,
       ),
     ],
   ),

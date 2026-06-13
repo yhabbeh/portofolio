@@ -20,6 +20,8 @@ class _SkillChipState extends State<SkillChip> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return MouseRegion(
       onEnter: (_) => _setHovered(true),
       onExit: (_) => _setHovered(false),
@@ -31,14 +33,12 @@ class _SkillChipState extends State<SkillChip> {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
-            color: _hovered
-                ? const Color(0xFF1B3A8B)
-                : const Color(0xFFEEF2FF),
+            color: _hovered ? colors.primary : colors.primary.withAlpha(20),
             borderRadius: BorderRadius.circular(16),
             boxShadow: _hovered
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF1B3A8B).withValues(alpha: 0.25),
+                      color: colors.primary.withAlpha((0.25 * 255).round()),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -49,7 +49,7 @@ class _SkillChipState extends State<SkillChip> {
           child: Text(
             widget.label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: _hovered ? Colors.white : const Color(0xFF1B3A8B),
+              color: _hovered ? colors.onPrimary : colors.primary,
               fontWeight: FontWeight.w600,
             ),
           ),

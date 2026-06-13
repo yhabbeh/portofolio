@@ -1,42 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'core/app_colors.dart';
-import 'core/app_text_styles.dart';
-import 'sections/home_page.dart';
+import 'core/di/service_locator.dart';
+import 'core/theme/app_theme.dart';
+import 'features/portfolio/presentation/blocs/contact/contact_bloc.dart';
+import 'features/portfolio/presentation/blocs/portfolio/portfolio_bloc.dart';
+import 'features/portfolio/presentation/pages/home_page.dart';
+import 'features/theme/presentation/bloc/theme_cubit.dart';
+import 'features/theme/presentation/bloc/theme_state.dart';
 
 class PortfolioApp extends StatelessWidget {
   const PortfolioApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeData.light().copyWith(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.light,
-        secondary: AppColors.secondary,
-      ).copyWith(surface: AppColors.surface, onSurface: AppColors.textPrimary),
-      scaffoldBackgroundColor: AppColors.background,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-        centerTitle: false,
-      ),
-      cardTheme: ThemeData.light().cardTheme.copyWith(
-        color: AppColors.surface,
-        elevation: 0,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(24)),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ThemeCubit>(
+          create: (_) => sl<ThemeCubit>(),
         ),
+        BlocProvider<PortfolioBloc>(
+          create: (_) => sl<PortfolioBloc>(),
+        ),
+        BlocProvider<ContactBloc>(
+          create: (_) => sl<ContactBloc>(),
+        ),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, state) {
+          return MaterialApp(
+            title: 'Yousef Habbeh Portfolio',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: state.themeMode,
+            home: const HomePage(),
+          );
+        },
       ),
-      textTheme: AppTextStyles.textTheme,
-    );
-
-    return MaterialApp(
-      title: 'Yousef Habbeh Portfolio',
-      debugShowCheckedModeBanner: false,
-      theme: theme,
-      home: const HomePage(),
     );
   }
 }
