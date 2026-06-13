@@ -118,31 +118,7 @@ class _HeroSectionState extends State<HeroSection>
       ],
     );
 
-    final Widget pulsingHalo = AnimatedBuilder(
-      animation: _floatingController,
-      builder: (context, _) {
-        final scale = 1.0 + sin(_floatingController.value * 2 * pi) * 0.05;
-        final opacity = 0.15 + sin(_floatingController.value * 2 * pi) * 0.05;
-        return Transform.scale(
-          scale: scale,
-          child: Container(
-            width: isWide ? 340 : 280,
-            height: isWide ? 420 : 360,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  gradientColors.first.withAlpha((opacity * 255).round()),
-                  gradientColors.last.withAlpha((opacity * 0.4 * 255).round()),
-                  Colors.transparent,
-                ],
-                stops: const [0.0, 0.6, 1.0],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    final double imageSize = isWide ? 320 : 260;
 
     final Widget profileCard = AnimatedBuilder(
       animation: Listenable.merge([
@@ -159,28 +135,61 @@ class _HeroSectionState extends State<HeroSection>
       },
       child: TiltCard(
         maxTilt: 0.03,
+        enableShadow: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ClipOval(
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                widget.profileImage,
-                height: isWide ? 320 : 260,
-                fit: BoxFit.cover,
-
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: isWide ? 320 : 260,
-                    color: theme.colorScheme.primary.withAlpha(30),
-                    child: Icon(
-                      Icons.person,
-                      size: 64,
-                      color: theme.colorScheme.primary,
+            Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedBuilder(
+                  animation: _floatingController,
+                  builder: (context, _) {
+                    final scale = 1.0 + sin(_floatingController.value * 2 * pi) * 0.05;
+                    final opacity = 0.15 + sin(_floatingController.value * 2 * pi) * 0.05;
+                    return Transform.scale(
+                      scale: scale,
+                      child: Container(
+                        width: imageSize + 48,
+                        height: imageSize + 48,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              gradientColors.first.withAlpha((opacity * 255).round()),
+                              gradientColors.last.withAlpha((opacity * 0.4 * 255).round()),
+                              Colors.transparent,
+                            ],
+                            stops: const [0.0, 0.6, 1.0],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                ClipOval(
+                  clipBehavior: Clip.antiAlias,
+                  child: SizedBox(
+                    width: imageSize,
+                    height: imageSize,
+                    child: Image.asset(
+                      widget.profileImage,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: theme.colorScheme.primary.withAlpha(30),
+                          child: Icon(
+                            Icons.person,
+                            size: 64,
+                            color: theme.colorScheme.primary,
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             Text(
@@ -201,21 +210,6 @@ class _HeroSectionState extends State<HeroSection>
       ),
     );
 
-    final Widget profileCardWithAura = Stack(
-      alignment: Alignment.center,
-      clipBehavior: Clip.none,
-      children: [
-        Positioned(
-          top: -24,
-          bottom: -24,
-          left: -24,
-          right: -24,
-          child: pulsingHalo,
-        ),
-        profileCard,
-      ],
-    );
-
     return ResponsiveContainer(
       child: ValueListenableBuilder<double>(
         valueListenable: widget.scrollOffsetNotifier,
@@ -232,7 +226,7 @@ class _HeroSectionState extends State<HeroSection>
                 children: [
                   Expanded(flex: 6, child: textColumn),
                   const SizedBox(width: 32),
-                  Expanded(flex: 4, child: profileCardWithAura),
+                  Expanded(flex: 4, child: profileCard),
                 ],
               )
             : Column(
@@ -240,7 +234,7 @@ class _HeroSectionState extends State<HeroSection>
                 children: [
                   textColumn,
                   const SizedBox(height: 48),
-                  Center(child: profileCardWithAura),
+                  Center(child: profileCard),
                 ],
               ),
       ),

@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class TiltCard extends StatefulWidget {
   final Widget child;
   final double maxTilt;
+  final bool enableShadow;
 
   const TiltCard({
     super.key,
     required this.child,
     this.maxTilt = 0.05,
+    this.enableShadow = true,
   });
 
   @override
@@ -27,17 +29,19 @@ class _TiltCardState extends State<TiltCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          boxShadow: _hovered
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ]
-              : null,
-        ),
+        decoration: widget.enableShadow
+            ? BoxDecoration(
+                boxShadow: _hovered
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ]
+                    : null,
+              )
+            : null,
         transform: _hovered ? _getTransform() : Matrix4.identity(),
         transformAlignment: Alignment.center,
         child: widget.child,

@@ -18,11 +18,20 @@ class AboutSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeExt = theme.extension<PortfolioThemeExtension>();
-    final cardBg = themeExt?.cardBackground ?? theme.cardTheme.color ?? Colors.white;
+    final cardBg =
+        themeExt?.cardBackground ?? theme.cardTheme.color ?? Colors.white;
     final borderColor = themeExt?.border ?? Colors.grey;
 
     final bool isWide = MediaQuery.of(context).size.width >= 900;
-    
+
+    final Widget descriptionWidget = Text(
+      description,
+      style: theme.textTheme.bodyLarge?.copyWith(
+        color: themeExt?.textSecondary,
+        height: 1.7,
+      ),
+    );
+
     Widget buildHighlights() {
       return Wrap(
         spacing: 16,
@@ -31,6 +40,7 @@ class AboutSection extends StatelessWidget {
             .map(
               (text) => TiltCard(
                 maxTilt: 0.05,
+                enableShadow: false,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: cardBg,
@@ -38,7 +48,10 @@ class AboutSection extends StatelessWidget {
                     border: Border.all(color: borderColor),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 18,
+                    ),
                     child: Text(
                       text,
                       style: theme.textTheme.bodyLarge?.copyWith(
@@ -57,42 +70,22 @@ class AboutSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(
-          title: 'About',
-          subtitle: 'Mobile Software Engineer and AI Specialist with a focus on scalable mobile systems and modern app experiences.',
-          gradient: true,
-        ),
-        const SizedBox(height: 32),
+        const SectionTitle(title: 'About Me', subtitle: '', gradient: true),
+        // const SizedBox(height: 32),
         if (isWide)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 6,
-                child: Text(
-                  description,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: themeExt?.textSecondary,
-                  ),
-                ),
-              ),
+              Expanded(flex: 6, child: descriptionWidget),
               const SizedBox(width: 32),
-              Expanded(
-                flex: 4,
-                child: buildHighlights(),
-              ),
+              Expanded(flex: 4, child: buildHighlights()),
             ],
           )
         else
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                description,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: themeExt?.textSecondary,
-                ),
-              ),
+              descriptionWidget,
               const SizedBox(height: 32),
               buildHighlights(),
             ],
