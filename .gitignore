@@ -1,0 +1,67 @@
+# Files and directories created by pub
+.dart_tool/
+.packages
+build/
+
+# Conventional directory for build outputs
+/build/
+
+# Omit committed pubspec.lock in package repositories
+pubspec.lock
+
+# Flutter IDE
+.idea/
+*.iml
+*.iws
+.idea/libraries/
+.metadata
+.dart_tool/
+
+# Android
+*.apk
+*.ap_
+*.aab
+local.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral
+
+# macOS
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/Flutter.framework
+macos/Flutter/Flutter.podspec
+macos/Flutter/Generated.xcconfig
+macos/Flutter/ephemeral
+
+# Linux
+linux/flutter/ephemeral
+
+# Windows
+windows/flutter/ephemeral
+
+# Web
+build/web/
+
+# Coverage
+coverage/
+
+# Environment
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project files
+*.log
+*.tmp
+*.swp
+*.swo
+*~
