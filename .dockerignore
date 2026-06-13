@@ -1,0 +1,9 @@
+.git
+.gitignore
+.gitattributes
+.dart_tool/
+build/
+.pub-cache/
+.pub/
+*.md
+.DS_Store
