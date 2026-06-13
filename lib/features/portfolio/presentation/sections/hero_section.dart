@@ -14,7 +14,7 @@ class HeroSection extends StatefulWidget {
   final String profileImage;
   final VoidCallback onContactPressed;
   final VoidCallback onDownloadPressed;
-  final double scrollOffset;
+  final ValueNotifier<double> scrollOffsetNotifier;
 
   const HeroSection({
     super.key,
@@ -25,7 +25,7 @@ class HeroSection extends StatefulWidget {
     required this.profileImage,
     required this.onContactPressed,
     required this.onDownloadPressed,
-    this.scrollOffset = 0,
+    required this.scrollOffsetNotifier,
   });
 
   @override
@@ -61,12 +61,14 @@ class _HeroSectionState extends State<HeroSection>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeExt = theme.extension<PortfolioThemeExtension>();
-    final gradientColors = themeExt?.gradientColors ?? [theme.colorScheme.primary, theme.colorScheme.secondary];
-    final cardBg = themeExt?.cardBackground ?? theme.cardTheme.color ?? Colors.white;
+    final gradientColors =
+        themeExt?.gradientColors ??
+        [theme.colorScheme.primary, theme.colorScheme.secondary];
+    final cardBg =
+        themeExt?.cardBackground ?? theme.cardTheme.color ?? Colors.white;
     final shadowColor = themeExt?.shadow ?? Colors.black.withAlpha(20);
 
     final bool isWide = MediaQuery.of(context).size.width >= 900;
-    final parallaxOffset = widget.scrollOffset * 0.15;
 
     final Widget textColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,9 +146,13 @@ class _HeroSectionState extends State<HeroSection>
     );
 
     final Widget profileCard = AnimatedBuilder(
-      animation: _floatingController,
+      animation: Listenable.merge([
+        _floatingController,
+        widget.scrollOffsetNotifier,
+      ]),
       builder: (context, child) {
         final floatOffset = sin(_floatingController.value * 2 * pi) * 8.0;
+        final parallaxOffset = widget.scrollOffsetNotifier.value * 0.15;
         return Transform.translate(
           offset: Offset(0, floatOffset - parallaxOffset * 0.5),
           child: child,
@@ -154,54 +160,44 @@ class _HeroSectionState extends State<HeroSection>
       },
       child: TiltCard(
         maxTilt: 0.03,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            color: cardBg,
-            boxShadow: [
-              BoxShadow(
-                color: shadowColor,
-                blurRadius: 28,
-                offset: const Offset(0, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipOval(
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                widget.profileImage,
+                height: isWide ? 320 : 260,
+                fit: BoxFit.cover,
+
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: isWide ? 320 : 260,
+                    color: theme.colorScheme.primary.withAlpha(30),
+                    child: Icon(
+                      Icons.person,
+                      size: 64,
+                      color: theme.colorScheme.primary,
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Image.asset(
-                  widget.profileImage,
-                  height: isWide ? 320 : 260,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: isWide ? 320 : 260,
-                      color: theme.colorScheme.primary.withAlpha(30),
-                      child: Icon(Icons.person, size: 64, color: theme.colorScheme.primary),
-                    );
-                  },
-                ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              widget.name,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
               ),
-              const SizedBox(height: 24),
-              Text(
-                widget.name,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.location,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: themeExt?.textSecondary,
               ),
-              const SizedBox(height: 8),
-              Text(
-                widget.location,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: themeExt?.textSecondary,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -222,8 +218,15 @@ class _HeroSectionState extends State<HeroSection>
     );
 
     return ResponsiveContainer(
-      child: Transform.translate(
-        offset: Offset(0, parallaxOffset),
+      child: ValueListenableBuilder<double>(
+        valueListenable: widget.scrollOffsetNotifier,
+        builder: (context, scrollOffset, child) {
+          final parallaxOffset = scrollOffset * 0.15;
+          return Transform.translate(
+            offset: Offset(0, parallaxOffset),
+            child: child,
+          );
+        },
         child: isWide
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

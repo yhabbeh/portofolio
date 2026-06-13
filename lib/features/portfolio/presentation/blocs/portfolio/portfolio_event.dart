@@ -13,13 +13,13 @@ class LoadPortfolioDataEvent extends PortfolioEvent {
 
 class FilterProjectsEvent extends PortfolioEvent {
   final String searchQuery;
-  final String? selectedTag;
+  final List<String> selectedTags;
 
   const FilterProjectsEvent({
     this.searchQuery = '',
-    this.selectedTag,
+    this.selectedTags = const [],
   });
 
   @override
-  List<Object?> get props => [searchQuery, selectedTag];
+  List<Object?> get props => [searchQuery, selectedTags];
 }

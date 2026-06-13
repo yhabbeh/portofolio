@@ -28,12 +28,25 @@ class PortfolioApp extends StatelessWidget {
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, state) {
+          final isDark = state.themeMode == ThemeMode.dark ||
+              (state.themeMode == ThemeMode.system &&
+                  MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+          final activeTheme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
+
           return MaterialApp(
             title: 'Yousef Habbeh Portfolio',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: state.themeMode,
+            builder: (context, child) {
+              return AnimatedTheme(
+                data: activeTheme,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
+                child: child!,
+              );
+            },
             home: const HomePage(),
           );
         },

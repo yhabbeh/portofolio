@@ -62,7 +62,7 @@ class _ParticleOverlayState extends State<ParticleOverlay>
               painter: _ParticlePainter(
                 particles: _particles,
                 progress: _controller.value,
-                color: const Color(0xFF1B3A8B),
+                color: Theme.of(context).colorScheme.primary,
                 mousePosNotifier: _mousePos,
               ),
             ),

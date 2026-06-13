@@ -36,15 +36,16 @@ class PortfolioBloc extends Bloc<PortfolioEvent, PortfolioState> {
     final currentState = state;
     if (currentState is PortfolioLoaded) {
       final query = event.searchQuery.toLowerCase();
-      final tag = event.selectedTag;
+      final tags = event.selectedTags;
 
       final List<ProjectCategory> filteredCategories = [];
 
       for (final category in currentState.data.projectCategories) {
         final List<Project> filteredProjects = [];
         for (final project in category.projects) {
-          final matchesTag = tag == null ||
-              project.technologies.any((t) => t.toLowerCase() == tag.toLowerCase());
+          final matchesTag = tags.isEmpty ||
+              project.technologies.any((tech) => tags.any(
+                  (selected) => selected.trim().toLowerCase() == tech.trim().toLowerCase()));
           final matchesQuery = query.isEmpty ||
               project.name.toLowerCase().contains(query) ||
               project.description.toLowerCase().contains(query);
@@ -54,8 +55,6 @@ class PortfolioBloc extends Bloc<PortfolioEvent, PortfolioState> {
           }
         }
 
-        // Include category even if empty so headings are visible, or omit if desired
-        // Standard UX is to omit categories that have zero matching projects
         if (filteredProjects.isNotEmpty) {
           filteredCategories.add(ProjectCategory(
             title: category.title,
@@ -67,7 +66,7 @@ class PortfolioBloc extends Bloc<PortfolioEvent, PortfolioState> {
       emit(PortfolioLoaded(
         data: currentState.data,
         searchQuery: event.searchQuery,
-        selectedTag: event.selectedTag,
+        selectedTags: event.selectedTags,
         filteredProjectCategories: filteredCategories,
       ));
     }

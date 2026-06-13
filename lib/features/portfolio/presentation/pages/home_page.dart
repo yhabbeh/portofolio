@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../../../widgets/cursor_glow.dart';
+import '../../../../widgets/grid_background.dart';
 import '../../../../widgets/navbar.dart';
 import '../../../../widgets/particle_background.dart' show ParticleOverlay;
 import '../../../../widgets/responsive_container.dart';
@@ -28,7 +29,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0;
+  final ValueNotifier<double> _scrollOffsetNotifier = ValueNotifier<double>(
+    0.0,
+  );
+  final ValueNotifier<String> _activeSectionNotifier = ValueNotifier<String>(
+    'Home',
+  );
 
   final GlobalKey _heroKey = GlobalKey();
   final GlobalKey _aboutKey = GlobalKey();
@@ -49,7 +55,44 @@ class _HomePageState extends State<HomePage> {
 
   void _onScroll() {
     if (mounted) {
-      setState(() => _scrollOffset = _scrollController.offset);
+      _scrollOffsetNotifier.value = _scrollController.offset;
+      _updateActiveSection();
+    }
+  }
+
+  void _updateActiveSection() {
+    final sections = {
+      'Home': _heroKey,
+      'About': _aboutKey,
+      'Experience': _experienceKey,
+      'Skills': _skillsKey,
+      'Projects': _projectsKey,
+      'Certifications': _certificationsKey,
+      'Awards': _awardsKey,
+      'Contact': _contactKey,
+    };
+
+    String activeSection = 'Home';
+    double minDistance = double.maxFinite;
+
+    sections.forEach((title, key) {
+      final context = key.currentContext;
+      if (context != null) {
+        final renderBox = context.findRenderObject() as RenderBox?;
+        if (renderBox != null) {
+          final position = renderBox.localToGlobal(Offset.zero);
+          // Focus offset around navbar bottom coordinate
+          final distance = (position.dy - 80).abs();
+          if (distance < minDistance) {
+            minDistance = distance;
+            activeSection = title;
+          }
+        }
+      }
+    });
+
+    if (_activeSectionNotifier.value != activeSection) {
+      _activeSectionNotifier.value = activeSection;
     }
   }
 
@@ -57,6 +100,8 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _scrollOffsetNotifier.dispose();
+    _activeSectionNotifier.dispose();
     super.dispose();
   }
 
@@ -92,14 +137,8 @@ class _HomePageState extends State<HomePage> {
     final bool isMobile = MediaQuery.of(context).size.width <= 800;
 
     final navItems = [
-      NavigationItem(
-        title: 'Home',
-        onTap: () => _scrollToSection(_heroKey),
-      ),
-      NavigationItem(
-        title: 'About',
-        onTap: () => _scrollToSection(_aboutKey),
-      ),
+      NavigationItem(title: 'Home', onTap: () => _scrollToSection(_heroKey)),
+      NavigationItem(title: 'About', onTap: () => _scrollToSection(_aboutKey)),
       NavigationItem(
         title: 'Experience',
         onTap: () => _scrollToSection(_experienceKey),
@@ -129,11 +168,20 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: Navbar(
-        items: isMobile ? [] : navItems,
-        isMobile: isMobile,
-        scrollController: _scrollController,
-        onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(72),
+        child: ValueListenableBuilder<String>(
+          valueListenable: _activeSectionNotifier,
+          builder: (context, activeSection, child) {
+            return Navbar(
+              items: isMobile ? [] : navItems,
+              isMobile: isMobile,
+              scrollController: _scrollController,
+              activeSection: activeSection,
+              onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+            );
+          },
+        ),
       ),
       drawer: isMobile
           ? Drawer(
@@ -175,9 +223,7 @@ class _HomePageState extends State<HomePage> {
       body: BlocBuilder<PortfolioBloc, PortfolioState>(
         builder: (context, state) {
           if (state is PortfolioLoading || state is PortfolioInitial) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           } else if (state is PortfolioError) {
             return Center(
               child: Padding(
@@ -185,7 +231,11 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline_rounded, size: 60, color: colors.error),
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 60,
+                      color: colors.error,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Failed to load portfolio details',
@@ -204,7 +254,9 @@ class _HomePageState extends State<HomePage> {
                       icon: const Icon(Icons.refresh),
                       label: const Text('Try Again'),
                       onPressed: () {
-                        context.read<PortfolioBloc>().add(const LoadPortfolioDataEvent());
+                        context.read<PortfolioBloc>().add(
+                          const LoadPortfolioDataEvent(),
+                        );
                       },
                     ),
                   ],
@@ -213,82 +265,90 @@ class _HomePageState extends State<HomePage> {
             );
           } else if (state is PortfolioLoaded) {
             final data = state.data;
-            return Stack(
-              children: [
-                const Positioned.fill(child: ParticleOverlay(particleCount: 12)),
-                Positioned.fill(
-                  child: CursorGlow(
-                    child: Scrollbar(
-                      controller: _scrollController,
-                      child: SingleChildScrollView(
+            return GridBackground(
+              child: Stack(
+                children: [
+                  const Positioned.fill(
+                    child: RepaintBoundary(
+                      child: ParticleOverlay(particleCount: 12),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: CursorGlow(
+                      child: Scrollbar(
                         controller: _scrollController,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            HeroSection(
-                              key: _heroKey,
-                              headline: data.heroHeadline,
-                              subtitle: data.heroSubtitle,
-                              name: data.name,
-                              location: data.location,
-                              profileImage: data.profileImage,
-                              scrollOffset: _scrollOffset,
-                              onContactPressed: () => _scrollToSection(_contactKey),
-                              onDownloadPressed: () => _openDownload(data.cvAsset, data.email),
-                            ),
-                            ResponsiveContainer(
-                              key: _aboutKey,
-                              child: AboutSection(
-                                description: data.aboutDescription,
-                                highlights: data.aboutHighlights,
-                              ),
-                            ),
-                            ResponsiveContainer(
-                              key: _experienceKey,
-                              child: ExperienceSection(
-                                experiences: data.experiences,
-                              ),
-                            ),
-                            ResponsiveContainer(
-                              key: _skillsKey,
-                              child: SkillsSection(
-                                skillCategories: data.skillCategories,
-                              ),
-                            ),
-                            ResponsiveContainer(
-                              key: _projectsKey,
-                              child: const ProjectsSection(),
-                            ),
-                            ResponsiveContainer(
-                              key: _certificationsKey,
-                              child: CertificationsSection(
-                                certificationTitle: data.certificationTitle,
-                              ),
-                            ),
-                            ResponsiveContainer(
-                              key: _awardsKey,
-                              child: AwardsSection(
-                                awardTitle: data.awardTitle,
-                              ),
-                            ),
-                            ResponsiveContainer(
-                              key: _contactKey,
-                              child: ContactSection(
-                                email: data.email,
-                                phone: data.phone,
-                                linkedinUrl: data.linkedinUrl,
-                                githubUrl: data.githubUrl,
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              HeroSection(
+                                key: _heroKey,
+                                headline: data.heroHeadline,
+                                subtitle: data.heroSubtitle,
+                                name: data.name,
                                 location: data.location,
+                                profileImage: data.profileImage,
+                                scrollOffsetNotifier: _scrollOffsetNotifier,
+                                onContactPressed: () =>
+                                    _scrollToSection(_contactKey),
+                                onDownloadPressed: () =>
+                                    _openDownload(data.cvAsset, data.email),
                               ),
-                            ),
-                            const SizedBox(height: 48),
-                          ],
+                              ResponsiveContainer(
+                                key: _aboutKey,
+                                child: AboutSection(
+                                  description: data.aboutDescription,
+                                  highlights: data.aboutHighlights,
+                                ),
+                              ),
+                              ResponsiveContainer(
+                                key: _experienceKey,
+                                child: ExperienceSection(
+                                  experiences: data.experiences,
+                                ),
+                              ),
+                              ResponsiveContainer(
+                                key: _skillsKey,
+                                child: SkillsSection(
+                                  skillCategories: data.skillCategories,
+                                ),
+                              ),
+                              ResponsiveContainer(
+                                key: _projectsKey,
+                                child: const ProjectsSection(),
+                              ),
+                              ResponsiveContainer(
+                                key: _certificationsKey,
+                                child: CertificationsSection(
+                                  certificationTitle: data.certificationTitle,
+                                ),
+                              ),
+                              ResponsiveContainer(
+                                key: _awardsKey,
+                                child: AwardsSection(
+                                  awardTitle: data.awardTitle,
+                                ),
+                              ),
+                              ResponsiveContainer(
+                                key: _contactKey,
+                                child: ContactSection(
+                                  email: data.email,
+                                  phone: data.phone,
+                                  linkedinUrl: data.linkedinUrl,
+                                  githubUrl: data.githubUrl,
+                                  location: data.location,
+                                ),
+                              ),
+                              const SizedBox(height: 48),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           }
           return const SizedBox.shrink();

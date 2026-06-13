@@ -1,0 +1,9 @@
+{
+  "dart.flutterSdkPath": "/Users/yousef.habbeh/fvm/versions/3.41.1",
+  "search.exclude": {
+    "**/.fvm": true
+  },
+  "files.exclude": {
+    "**/.fvm": true
+  }
+}

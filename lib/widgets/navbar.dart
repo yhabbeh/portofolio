@@ -17,12 +17,14 @@ class Navbar extends StatefulWidget implements PreferredSizeWidget {
   final bool isMobile;
   final VoidCallback? onMenuTap;
   final ScrollController scrollController;
+  final String activeSection;
 
   const Navbar({
     super.key,
     required this.items,
     required this.isMobile,
     required this.scrollController,
+    required this.activeSection,
     this.onMenuTap,
   });
 
@@ -63,13 +65,23 @@ class _NavbarState extends State<Navbar> {
     return AppBar(
       elevation: 0,
       backgroundColor: isScrolled
-          ? theme.scaffoldBackgroundColor.withAlpha((0.85 * 255).round())
+          ? theme.scaffoldBackgroundColor.withAlpha((0.75 * 255).round())
           : theme.scaffoldBackgroundColor,
       flexibleSpace: isScrolled
           ? ClipRect(
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(color: Colors.transparent),
+                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: theme.colorScheme.primary.withAlpha(20),
+                        width: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             )
           : null,
@@ -93,6 +105,7 @@ class _NavbarState extends State<Navbar> {
               child: Center(
                 child: NavbarButton(
                   title: item.title,
+                  isActive: item.title.toLowerCase() == widget.activeSection.toLowerCase(),
                   onTap: item.onTap,
                 ),
               ),
@@ -125,11 +138,13 @@ class _NavbarState extends State<Navbar> {
 class NavbarButton extends StatefulWidget {
   final String title;
   final VoidCallback onTap;
+  final bool isActive;
 
   const NavbarButton({
     super.key,
     required this.title,
     required this.onTap,
+    this.isActive = false,
   });
 
   @override
@@ -143,6 +158,8 @@ class _NavbarButtonState extends State<NavbarButton> {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme.bodyMedium;
+    final isHighlighted = _hovered || widget.isActive;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -150,9 +167,9 @@ class _NavbarButtonState extends State<NavbarButton> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedScale(
-          scale: _hovered ? 1.08 : 1.0,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutBack,
+          scale: isHighlighted ? 1.05 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: Column(
@@ -162,18 +179,18 @@ class _NavbarButtonState extends State<NavbarButton> {
                 AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 200),
                   style: TextStyle(
-                    color: _hovered ? colors.primary : colors.onSurface.withAlpha((0.75 * 255).round()),
+                    color: isHighlighted ? colors.primary : colors.onSurface.withAlpha((0.75 * 255).round()),
                     fontSize: 15,
-                    fontWeight: _hovered ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w500,
                     fontFamily: textStyle?.fontFamily,
                   ),
                   child: Text(widget.title),
                 ),
                 const SizedBox(height: 3),
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
+                  duration: const Duration(milliseconds: 200),
                   curve: Curves.easeOut,
-                  width: _hovered ? 32.0 : 0.0,
+                  width: isHighlighted ? 32.0 : 0.0,
                   height: 2.5,
                   decoration: BoxDecoration(
                     color: colors.primary,

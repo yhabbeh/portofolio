@@ -26,7 +26,7 @@ class _CursorGlowState extends State<CursorGlow> {
       onExit: (_) => _cursorPos.value = null,
       child: Stack(
         children: [
-          widget.child,
+          RepaintBoundary(child: widget.child),
           ValueListenableBuilder<Offset?>(
             valueListenable: _cursorPos,
             builder: (context, pos, _) {
@@ -35,18 +35,20 @@ class _CursorGlowState extends State<CursorGlow> {
                 left: pos.dx - 200,
                 top: pos.dy - 200,
                 child: IgnorePointer(
-                  child: Container(
-                    width: 400,
-                    height: 400,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-const Color(0xFF1B3A8B).withValues(alpha: 0.06),
-                        const Color(0xFF2F5ED7).withValues(alpha: 0.03),
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.4, 1.0],
+                  child: RepaintBoundary(
+                    child: Container(
+                      width: 400,
+                      height: 400,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            const Color(0xFF1B3A8B).withValues(alpha: 0.06),
+                            const Color(0xFF2F5ED7).withValues(alpha: 0.03),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.4, 1.0],
+                        ),
                       ),
                     ),
                   ),

@@ -16,12 +16,13 @@ class ExperienceSection extends StatelessWidget {
       children: [
         const SectionTitle(
           title: 'Experience',
-          subtitle: 'Professional roles and responsibilities earned over the years.',
+          subtitle:
+              'Professional roles and responsibilities earned over the years.',
           gradient: true,
         ),
         const SizedBox(height: 32),
         SizedBox(
-          height: 200,
+          height: 270,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: experiences.length,

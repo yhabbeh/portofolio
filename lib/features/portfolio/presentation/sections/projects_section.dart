@@ -35,7 +35,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
         }
 
         final data = state.data;
-        final activeTag = state.selectedTag;
+        final activeTags = state.selectedTags;
         final currentQuery = state.searchQuery;
 
         // Synchronize search text field if updated elsewhere
@@ -57,7 +57,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
           children: [
             const SectionTitle(
               title: 'Projects',
-              subtitle: 'Open-source projects spanning mobile, AI, and web development. Feel free to search or filter by technology tag.',
+              subtitle: 'Open-source projects spanning mobile, AI, and web development. Feel free to search or filter by multiple technology tags simultaneously.',
               gradient: true,
             ),
             const SizedBox(height: 24),
@@ -74,7 +74,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
                         context.read<PortfolioBloc>().add(
                               FilterProjectsEvent(
                                 searchQuery: val,
-                                selectedTag: activeTag,
+                                selectedTags: activeTags,
                               ),
                             );
                       },
@@ -89,7 +89,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
                                   context.read<PortfolioBloc>().add(
                                         FilterProjectsEvent(
                                           searchQuery: '',
-                                          selectedTag: activeTag,
+                                          selectedTags: activeTags,
                                         ),
                                       );
                                 },
@@ -116,30 +116,38 @@ class _ProjectsSectionState extends State<ProjectsSection> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 // "All" filter chip
                 ChoiceChip(
                   label: const Text('All Projects'),
-                  selected: activeTag == null,
+                  selected: activeTags.isEmpty,
                   onSelected: (_) {
                     context.read<PortfolioBloc>().add(
                           FilterProjectsEvent(
                             searchQuery: currentQuery,
-                            selectedTag: null,
+                            selectedTags: const [],
                           ),
                         );
                   },
                 ),
                 ...allTags.map((tag) {
-                  final isSelected = activeTag == tag;
-                  return ChoiceChip(
+                  final isSelected = activeTags.contains(tag);
+                  return FilterChip(
                     label: Text(tag),
                     selected: isSelected,
-                    onSelected: (_) {
+                    showCheckmark: true,
+                    onSelected: (selected) {
+                      final updatedTags = List<String>.from(activeTags);
+                      if (selected) {
+                        updatedTags.add(tag);
+                      } else {
+                        updatedTags.remove(tag);
+                      }
                       context.read<PortfolioBloc>().add(
                             FilterProjectsEvent(
                               searchQuery: currentQuery,
-                              selectedTag: isSelected ? null : tag,
+                              selectedTags: updatedTags,
                             ),
                           );
                     },

@@ -21,18 +21,18 @@ class PortfolioLoading extends PortfolioState {
 class PortfolioLoaded extends PortfolioState {
   final PortfolioData data;
   final String searchQuery;
-  final String? selectedTag;
+  final List<String> selectedTags;
   final List<ProjectCategory> filteredProjectCategories;
 
   const PortfolioLoaded({
     required this.data,
     this.searchQuery = '',
-    this.selectedTag,
+    this.selectedTags = const [],
     required this.filteredProjectCategories,
   });
 
   @override
-  List<Object?> get props => [data, searchQuery, selectedTag, filteredProjectCategories];
+  List<Object?> get props => [data, searchQuery, selectedTags, filteredProjectCategories];
 }
 
 class PortfolioError extends PortfolioState {
