@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:portfolio_web/app.dart';
 import 'package:portfolio_web/core/di/service_locator.dart';
+import 'package:portfolio_web/core/services/email_service.dart';
 import 'package:portfolio_web/features/portfolio/data/datasources/portfolio_local_data_source.dart';
 import 'package:portfolio_web/features/portfolio/data/models/portfolio_data_model.dart';
 import 'package:portfolio_web/features/portfolio/data/repositories/portfolio_repository_impl.dart';
@@ -55,8 +56,10 @@ void main() {
       () => MockPortfolioLocalDataSource(),
     );
 
+    sl.registerLazySingleton<EmailService>(() => EmailService());
+
     sl.registerLazySingleton<PortfolioRepository>(
-      () => PortfolioRepositoryImpl(localDataSource: sl()),
+      () => PortfolioRepositoryImpl(localDataSource: sl(), emailService: sl()),
     );
 
     sl.registerLazySingleton<GetPortfolioData>(
@@ -82,8 +85,9 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const PortfolioApp());
     await tester.pump();
-    // Wait for the mock delay/animation frames
-    await tester.pumpAndSettle(const Duration(milliseconds: 800));
+    // Wait for data loading and initial frames
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
 
     // Verify name, location and headline text is found
     expect(find.text('Yousef Habbeh'), findsAtLeastNWidgets(1));
