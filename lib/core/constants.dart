@@ -185,6 +185,61 @@ const List<SkillCategory> kSkillCategories = [
 
 final List<ProjectCategory> kProjectCategories = [
   ProjectCategory(
+    title: 'Professional Projects',
+    projects: [
+      ProjectModel(
+        name: 'BinDowal Bank',
+        description:
+            'Engineered core banking UIs encompassing financial transactions, account overviews, and debit/credit card management. Architected with Clean Architecture for maintainability and scalability. Implemented BLoC to orchestrate complex financial state transitions with high-performance execution.',
+        technologies: const ['Flutter', 'BLoC', 'Clean Architecture'],
+        githubUrl: '',
+        googlePlayUrl:
+            'https://play.google.com/store/apps/details?id=com.mobile.newdemobanking',
+        stars: 0,
+      ),
+      ProjectModel(
+        name: 'Sanad — Ministry of Foreign Affairs',
+        description:
+            'Spearheaded micro-services digitizing legal government processes including marriage declarations and sponsorships. Integrated complex Ministry of Economy APIs handling sensitive government data under strict security protocols. Adhered to enterprise-grade government standards for code architecture and UI/UX compliance.',
+        technologies: const ['Flutter', 'REST APIs'],
+        githubUrl: '',
+        googlePlayUrl:
+            'https://play.google.com/store/apps/details?id=com.modee.sanad',
+        stars: 0,
+      ),
+      ProjectModel(
+        name: 'EduWave K-12',
+        description:
+            'Developed and optimized assessment and assignment modules for student engagement and educator administration. Built administrative dashboards enabling educators to monitor class progress, author exams, and track student grading.',
+        technologies: const ['Flutter', 'BLoC'],
+        githubUrl: '',
+        googlePlayUrl:
+            'https://play.google.com/store/apps/details?id=com.itgsolutions.eduwave',
+        stars: 0,
+      ),
+      ProjectModel(
+        name: 'WaveDMS',
+        description:
+            'Executed debugging and performance optimization protocols, significantly improving system stability. Pioneered a digital document signature feature with automated routing for seamless multi-department authorization.',
+        technologies: const ['Flutter', 'Digital Signatures', 'Workflow Automation'],
+        githubUrl: '',
+        googlePlayUrl:
+            'https://play.google.com/store/apps/details?id=com.itgsolutions.WaveDMS',
+        stars: 0,
+      ),
+      ProjectModel(
+        name: 'ITG Timecard',
+        description:
+            'Upgraded GPS-based attendance tracking with advanced anti-spoofing mechanisms ensuring location data integrity. Engineered employee management modules for leave and departure request submission and tracking.',
+        technologies: const ['Flutter', 'GPS', 'Anti-Spoofing'],
+        githubUrl: '',
+        googlePlayUrl:
+            'https://play.google.com/store/apps/details?id=com.itgsolutions.gpsAttendanceSystem',
+        stars: 0,
+      ),
+    ],
+  ),
+  ProjectCategory(
     title: 'Mobile Applications',
     projects: [
       ProjectModel(
@@ -208,11 +263,13 @@ final List<ProjectCategory> kProjectCategories = [
       //   githubUrl: 'https://github.com/yhabbeh/drug_reminder',
       // ),
       const ProjectModel(
-        name: 'dental-appointment-mobile',
+        name: 'AppointDent Dental Manager',
         description:
-            'Professional dental practice management app with Firebase authentication, multi-language support, biometric auth, and patient management.',
-        technologies: ['Flutter', 'Firebase', 'Localization', 'Biometrics'],
+            'Architected and deployed from inception as a comprehensive end-to-end solution for dental clinic management. Designed with Clean Architecture for scalability. Integrated Firebase for secure authorization and real-time cloud database. Employs BLoC for fluid performance and rapid responsiveness.',
+        technologies: ['Flutter', 'Firebase', 'BLoC', 'Clean Architecture'],
         githubUrl: 'https://github.com/yhabbeh/dental-appointment-mobile',
+        googlePlayUrl:
+            'https://play.google.com/store/apps/details?id=com.habbeh.dental',
         stars: 1,
       ),
       const ProjectModel(

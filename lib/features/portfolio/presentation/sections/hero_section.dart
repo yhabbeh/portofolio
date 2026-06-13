@@ -64,9 +64,9 @@ class _HeroSectionState extends State<HeroSection>
     final gradientColors =
         themeExt?.gradientColors ??
         [theme.colorScheme.primary, theme.colorScheme.secondary];
-    final cardBg =
-        themeExt?.cardBackground ?? theme.cardTheme.color ?? Colors.white;
-    final shadowColor = themeExt?.shadow ?? Colors.black.withAlpha(20);
+    // final cardBg =
+    //     themeExt?.cardBackground ?? theme.cardTheme.color ?? Colors.white;
+    // final shadowColor = themeExt?.shadow ?? Colors.black.withAlpha(20);
 
     final bool isWide = MediaQuery.of(context).size.width >= 900;
 
@@ -129,8 +129,7 @@ class _HeroSectionState extends State<HeroSection>
             width: isWide ? 340 : 280,
             height: isWide ? 420 : 360,
             decoration: BoxDecoration(
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.circular(40),
+              shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
                   gradientColors.first.withAlpha((opacity * 255).round()),

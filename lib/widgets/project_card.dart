@@ -56,10 +56,14 @@ class _ProjectCardState extends State<ProjectCard> {
               ),
             ),
             child: InkWell(
-              onTap: () => launchUrlString(
-                widget.project.githubUrl,
-                mode: LaunchMode.externalApplication,
-              ),
+              onTap: () {
+                final url = widget.project.githubUrl.isNotEmpty
+                    ? widget.project.githubUrl
+                    : widget.project.googlePlayUrl;
+                if (url.isNotEmpty) {
+                  launchUrlString(url, mode: LaunchMode.externalApplication);
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -91,6 +95,21 @@ class _ProjectCardState extends State<ProjectCard> {
                                 ),
                               ),
                             ],
+                          ),
+                        if (widget.project.googlePlayUrl.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: GestureDetector(
+                              onTap: () => launchUrlString(
+                                widget.project.googlePlayUrl,
+                                mode: LaunchMode.externalApplication,
+                              ),
+                              child: Icon(
+                                Icons.shop,
+                                size: 16,
+                                color: colors.primary,
+                              ),
+                            ),
                           ),
                       ],
                     ),

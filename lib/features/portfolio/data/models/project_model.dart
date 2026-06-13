@@ -5,7 +5,8 @@ class ProjectModel extends Project {
     required super.name,
     required super.description,
     required super.technologies,
-    required super.githubUrl,
+    super.githubUrl,
+    super.googlePlayUrl,
     required super.stars,
   });
 
@@ -14,7 +15,8 @@ class ProjectModel extends Project {
       name: json['name'] as String,
       description: json['description'] as String,
       technologies: List<String>.from(json['technologies'] as List),
-      githubUrl: json['github_url'] as String,
+      githubUrl: json['github_url'] as String? ?? '',
+      googlePlayUrl: json['google_play_url'] as String? ?? '',
       stars: json['stars'] as int? ?? 0,
     );
   }
@@ -25,6 +27,7 @@ class ProjectModel extends Project {
       'description': description,
       'technologies': technologies,
       'github_url': githubUrl,
+      'google_play_url': googlePlayUrl,
       'stars': stars,
     };
   }
