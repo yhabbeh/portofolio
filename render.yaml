@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: portfolio
+    env: docker
+    dockerfilePath: ./Dockerfile
+    pullRequestPreviewsEnabled: true
