@@ -1,10 +1,12 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../../../widgets/responsive_container.dart';
 import '../../../../widgets/tilt_card.dart';
+import '../../../../widgets/small_men_playground.dart';
 
 class HeroSection extends StatefulWidget {
   final String headline;
@@ -115,6 +117,18 @@ class _HeroSectionState extends State<HeroSection>
             ),
           ],
         ),
+        if (isWide) ...[
+          const SizedBox(height: 48),
+          SizedBox(
+            height: 240,
+            width: 320,
+            child: Lottie.network(
+              'https://assets5.lottiefiles.com/packages/lf20_iv4dsx3q.json',
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+            ),
+          ),
+        ],
       ],
     );
 
@@ -211,33 +225,103 @@ class _HeroSectionState extends State<HeroSection>
     );
 
     return ResponsiveContainer(
-      child: ValueListenableBuilder<double>(
-        valueListenable: widget.scrollOffsetNotifier,
-        builder: (context, scrollOffset, child) {
-          final parallaxOffset = scrollOffset * 0.15;
-          return Transform.translate(
-            offset: Offset(0, parallaxOffset),
-            child: child,
-          );
-        },
-        child: isWide
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 6, child: textColumn),
-                  const SizedBox(width: 32),
-                  Expanded(flex: 4, child: profileCard),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  textColumn,
-                  const SizedBox(height: 48),
-                  Center(child: profileCard),
-                ],
-              ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedBuilder(
+            animation: _floatingController,
+            builder: (context, _) {
+              return Positioned.fill(
+                child: CustomPaint(
+                  painter: _OrbsPainter(
+                    t: _floatingController.value,
+                    colors: gradientColors,
+                  ),
+                ),
+              );
+            },
+          ),
+          ValueListenableBuilder<double>(
+            valueListenable: widget.scrollOffsetNotifier,
+            builder: (context, scrollOffset, child) {
+              final parallaxOffset = scrollOffset * 0.15;
+              return Transform.translate(
+                offset: Offset(0, parallaxOffset),
+                child: child,
+              );
+            },
+            child: isWide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(flex: 6, child: textColumn),
+                      const SizedBox(width: 32),
+                      Expanded(flex: 4, child: profileCard),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      textColumn,
+                      const SizedBox(height: 48),
+                      Center(child: profileCard),
+                    ],
+                  ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: -60,
+            child: const SmallMenPlayground(),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _OrbsPainter extends CustomPainter {
+  final double t;
+  final List<Color> colors;
+
+  const _OrbsPainter({required this.t, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final orbs = [
+      _OrbData(0.2, 0.15, 200, 0.0, 0.6),
+      _OrbData(0.8, 0.7, 140, 1.3, 0.5),
+      _OrbData(0.5, 0.3, 160, 2.8, 0.4),
+      _OrbData(0.9, 0.2, 100, 0.7, 0.35),
+      _OrbData(0.15, 0.75, 120, 3.5, 0.3),
+    ];
+
+    for (final orb in orbs) {
+      final dx = sin(t * 2 * pi * 0.3 + orb.phase) * size.width * 0.12;
+      final dy = cos(t * 2 * pi * 0.2 + orb.phase) * size.height * 0.08;
+      final cx = size.width * orb.x + dx;
+      final cy = size.height * orb.y + dy;
+      final radius = orb.radius * (1 + sin(t * 2 * pi * 0.4 + orb.phase) * 0.1);
+
+      final Paint paint = Paint()..shader = RadialGradient(
+        colors: [
+          colors.first.withAlpha((orb.alpha * 255).round()),
+          colors.last.withAlpha((orb.alpha * 0.4 * 255).round()),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius));
+
+      canvas.drawCircle(Offset(cx, cy), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_OrbsPainter old) => old.t != t;
+}
+
+class _OrbData {
+  final double x, y, radius, phase, alpha;
+  const _OrbData(this.x, this.y, this.radius, this.phase, this.alpha);
 }

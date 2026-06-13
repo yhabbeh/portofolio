@@ -6,6 +6,8 @@ import '../../../../widgets/cursor_glow.dart';
 import '../../../../widgets/grid_background.dart';
 import '../../../../widgets/navbar.dart';
 import '../../../../widgets/particle_background.dart' show ParticleOverlay;
+import '../../../../widgets/falling_code_snippets.dart';
+import '../../../../widgets/roaming_lottie_character.dart';
 import '../../../../widgets/responsive_container.dart';
 import '../blocs/portfolio/portfolio_bloc.dart';
 import '../blocs/portfolio/portfolio_event.dart';
@@ -269,8 +271,11 @@ class _HomePageState extends State<HomePage> {
               child: Stack(
                 children: [
                   const Positioned.fill(
+                    child: ParticleOverlay(particleCount: 12),
+                  ),
+                  const Positioned.fill(
                     child: RepaintBoundary(
-                      child: ParticleOverlay(particleCount: 12),
+                      child: FallingCodeSnippets(),
                     ),
                   ),
                   Positioned.fill(
@@ -346,6 +351,13 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
+                  ),
+                  const Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 10,
+                    height: 80,
+                    child: RoamingLottieCharacter(),
                   ),
                 ],
               ),
