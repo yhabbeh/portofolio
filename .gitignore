@@ -6,8 +6,8 @@ build/
 # Conventional directory for build outputs
 /build/
 
-# Omit committed pubspec.lock in package repositories
-pubspec.lock
+# Uncomment to omit pubspec.lock for library packages
+# pubspec.lock
 
 # Flutter IDE
 .idea/
