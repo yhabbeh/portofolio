@@ -1,5 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// ─── Goal width in logical pixels ─────────────────────────────────────────────
+const double _kGoalWidth = 18.0;
 
 class SmallMenPlayground extends StatefulWidget {
   const SmallMenPlayground({super.key});
@@ -14,7 +18,24 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
   final List<_ToyCharacter> _characters = [];
   _SoccerBall? _ball;
   final Random _random = Random();
-  double _width = 1000; // Updated by LayoutBuilder
+  double _width = 1000;
+
+  // Scoring
+  int _playerScore = 0;
+  int _aiScore = 0;
+  double _goalFlashTimer = 0.0; // counts down from 1.5 after a goal
+  String _goalMessage = '';
+
+  // Challenge timer: 90 seconds
+  double _challengeTimeLeft = 90.0;
+  bool _gameOver = false;
+
+  // Keyboard controls
+  final FocusNode _focusNode = FocusNode();
+  bool _leftPressed = false;
+  bool _rightPressed = false;
+  bool _jumpPressed = false;
+  double? _targetPlayerX;
 
   @override
   void initState() {
@@ -24,13 +45,13 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
       duration: const Duration(seconds: 1),
     )..addListener(_updatePhysics);
     _controller.repeat();
-
     _initPlayground();
   }
 
   void _initPlayground() {
-    // We add 3 characters playing soccer
-    // 1. Striker (Fast, eager)
+    _characters.clear();
+
+    // Striker AI (Fast, eager)
     _characters.add(_ToyCharacter(
       id: 0,
       x: 150,
@@ -41,7 +62,7 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
       state: _ToyState.walking,
     ));
 
-    // 2. Midfielder (Balanced)
+    // Midfielder AI (Balanced)
     _characters.add(_ToyCharacter(
       id: 1,
       x: 450,
@@ -52,7 +73,7 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
       state: _ToyState.walking,
     ));
 
-    // 3. Defender (Slower, keeps distance unless ball is close)
+    // Defender AI (Slower)
     _characters.add(_ToyCharacter(
       id: 2,
       x: 750,
@@ -63,165 +84,274 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
       state: _ToyState.walking,
     ));
 
-    // Bouncing Soccer Ball
-    _ball = _SoccerBall(x: 400, y: 150, vx: 100, vy: 0);
+    // Player Character (YOU – orange)
+    _characters.add(_ToyCharacter(
+      id: 99,
+      isPlayer: true,
+      x: 300,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      baseSpeed: 90,
+      state: _ToyState.idle,
+    ));
+
+    // Ball starts in the centre
+    _ball = _SoccerBall(
+      x: _width > 0 ? _width / 2 : 400,
+      y: 120,
+      vx: 80,
+      vy: 0,
+    );
+  }
+
+  /// Reset ball to centre after a goal.
+  void _resetBall() {
+    _ball = _SoccerBall(
+      x: _width / 2,
+      y: 120,
+      vx: (_random.nextBool() ? 1 : -1) * 60.0,
+      vy: 40,
+    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   void _updatePhysics() {
     if (!mounted) return;
-    const double dt = 0.016; // 1/60s frame step
+    const double dt = 0.016;
     const double gravity = -420.0;
     const double groundY = 0.0;
 
     setState(() {
-      // 1. Update Ball Physics
+      // ── Challenge Timer ──────────────────────────────────────────────────────
+      if (!_gameOver) {
+        _challengeTimeLeft -= dt;
+        if (_challengeTimeLeft <= 0) {
+          _challengeTimeLeft = 0;
+          _gameOver = true;
+        }
+      }
+
+      // ── Goal flash countdown ─────────────────────────────────────────────────
+      if (_goalFlashTimer > 0) {
+        _goalFlashTimer -= dt;
+        if (_goalFlashTimer < 0) _goalFlashTimer = 0;
+      }
+
+      if (_gameOver) return;
+
+      // ── Ball Physics ─────────────────────────────────────────────────────────
       if (_ball != null) {
         _ball!.vy += gravity * dt;
         _ball!.x += _ball!.vx * dt;
         _ball!.y += _ball!.vy * dt;
 
-        // Bounce ball on ground
+        // Ground bounce
         if (_ball!.y <= groundY) {
           _ball!.y = groundY;
-          _ball!.vy = -_ball!.vy * 0.72; // bounce damping
-          _ball!.vx *= 0.96; // rolling resistance
-          
-          // Tiny random nudge if ball stops moving
+          _ball!.vy = -_ball!.vy * 0.72;
+          _ball!.vx *= 0.96;
           if (_ball!.vx.abs() < 12 && _ball!.vy.abs() < 12) {
             _ball!.vx = (_random.nextDouble() - 0.5) * 140;
             _ball!.vy = _random.nextDouble() * 180 + 100;
           }
         }
 
-        // Bounce ball on walls
-        if (_ball!.x <= 20) {
-          _ball!.x = 20;
-          _ball!.vx = -_ball!.vx * 0.8;
-        } else if (_ball!.x >= _width - 20) {
-          _ball!.x = _width - 20;
-          _ball!.vx = -_ball!.vx * 0.8;
+        // ── Goal detection ───────────────────────────────────────────────────
+        // Left goal = AI scores | Right goal = Player scores
+        final double leftGoalX = _kGoalWidth;
+        final double rightGoalX = _width - _kGoalWidth;
+
+        if (_ball!.x <= leftGoalX) {
+          _aiScore++;
+          _goalMessage = 'AI SCORES! 😈';
+          _goalFlashTimer = 1.8;
+          _resetBall();
+        } else if (_ball!.x >= rightGoalX) {
+          _playerScore++;
+          _goalMessage = 'GOAL! 🎉';
+          _goalFlashTimer = 1.8;
+          _resetBall();
+        }
+
+        // Wall bounce (only for non-goal hits — already handled above)
+        if (_ball != null) {
+          if (_ball!.x <= leftGoalX) {
+            _ball!.x = leftGoalX;
+            _ball!.vx = -_ball!.vx * 0.8;
+          } else if (_ball!.x >= rightGoalX) {
+            _ball!.x = rightGoalX;
+            _ball!.vx = -_ball!.vx * 0.8;
+          }
         }
       }
 
-      // 2. Update Characters (Procedural AI & Animation state)
+      // ── Characters ───────────────────────────────────────────────────────────
       for (int i = 0; i < _characters.length; i++) {
         final c = _characters[i];
-        
-        // Decrement behavior action timers
         c.actionTimer -= dt;
 
-        // Handle active kick animation phase
+        // Kicking animation phase
         if (c.state == _ToyState.kicking) {
-          c.kickTimer += dt * 8; // speed of kicking motion
+          c.kickTimer += dt * 8;
           if (c.kickTimer >= pi) {
             c.state = _ToyState.walking;
             c.kickTimer = 0.0;
           }
         }
 
-        // Decide behavior state if timer expires
-        if (c.actionTimer <= 0 && c.state != _ToyState.kicking) {
-          c.actionTimer = _random.nextDouble() * 2.5 + 1.5;
-          final r = _random.nextDouble();
-          
-          if (r < 0.15 && !c.isJumping) {
-            c.state = _ToyState.idle;
-            c.vx = 0;
-          } else {
-            c.state = _ToyState.walking;
-          }
-        }
-
-        // Soccer AI Play Mechanics
-        if (_ball != null && c.state != _ToyState.kicking) {
-          final double distToBall = _ball!.x - c.x;
-          final double distY = _ball!.y - c.y;
-
-          // Determine who is closest to chase the ball
-          bool isChaser = true;
-          for (final other in _characters) {
-            if (other.id != c.id) {
-              final double otherDist = (other.x - _ball!.x).abs();
-              if (otherDist < distToBall.abs() && (other.x - c.x).abs() > 30) {
-                isChaser = false;
-              }
-            }
-          }
-
-          if (isChaser) {
-            // Chase the ball
+        if (c.isPlayer) {
+          // ── Player Input ───────────────────────────────────────────────────
+          c.vx = 0;
+          if (_leftPressed) {
+            _targetPlayerX = null;
+            c.vx = -c.baseSpeed * 1.35;
+            c.faceLeft = true;
             c.state = _ToyState.running;
-            c.vx = distToBall.sign * c.baseSpeed * 1.35;
-            
-            // Handle Face direction
-            if (c.vx > 5) c.faceLeft = false;
-            if (c.vx < -5) c.faceLeft = true;
+          } else if (_rightPressed) {
+            _targetPlayerX = null;
+            c.vx = c.baseSpeed * 1.35;
+            c.faceLeft = false;
+            c.state = _ToyState.running;
+          } else if (_targetPlayerX != null) {
+            final double dist = _targetPlayerX! - c.x;
+            if (dist.abs() > 10) {
+              c.vx = dist.sign * c.baseSpeed * 1.35;
+              c.faceLeft = c.vx < 0;
+              c.state = _ToyState.running;
+            } else {
+              _targetPlayerX = null;
+              c.state = _ToyState.idle;
+            }
+          } else {
+            if (c.state != _ToyState.kicking) c.state = _ToyState.idle;
+          }
 
-            // Reach ball interaction zone
+          if (_jumpPressed && !c.isJumping) {
+            c.isJumping = true;
+            c.vy = 240.0;
+          }
+
+          // Player ball interaction
+          if (_ball != null && c.state != _ToyState.kicking) {
+            final double distToBall = _ball!.x - c.x;
+            final double distY = _ball!.y - c.y;
             if (distToBall.abs() < 24 && distY < 24) {
-              // 1. Kick/Pass ball to another player!
               c.state = _ToyState.kicking;
               c.kickTimer = 0.0;
-
-              // Find target player to pass to
-              _ToyCharacter? target;
-              double minTargetDist = double.maxFinite;
-              for (final t in _characters) {
-                if (t.id != c.id) {
-                  final d = (t.x - c.x).abs();
-                  if (d < minTargetDist) {
-                    minTargetDist = d;
-                    target = t;
-                  }
-                }
-              }
-
-              // Apply kick impulse toward target or forward
-              if (target != null) {
-                final double passDir = (target.x - c.x).sign;
-                _ball!.vx = passDir * (180.0 + _random.nextDouble() * 60.0);
-                _ball!.vy = _random.nextDouble() * 130.0 + 80.0; // soft loft pass
-              } else {
-                _ball!.vx = (c.faceLeft ? -1.0 : 1.0) * (200.0 + _random.nextDouble() * 50.0);
-                _ball!.vy = _random.nextDouble() * 150.0 + 90.0;
-              }
-            } else if (distToBall.abs() < 32 && _ball!.y > 22 && _ball!.y < 65 && !c.isJumping) {
-              // 2. Head the ball! (Jump to reach high ball)
+              _targetPlayerX = null;
+              _ball!.vx =
+                  (c.faceLeft ? -1.0 : 1.0) *
+                  (220.0 + _random.nextDouble() * 60.0);
+              _ball!.vy = _random.nextDouble() * 120.0 + 90.0;
+            } else if (distToBall.abs() < 30 &&
+                _ball!.y > 22 &&
+                _ball!.y < 65 &&
+                !c.isJumping &&
+                _jumpPressed) {
               c.isJumping = true;
               c.vy = 240.0;
-              c.vx = distToBall.sign * 40;
+              _ball!.vx = distToBall.sign * 180;
+              _ball!.vy = _random.nextDouble() * 80 + 40;
             }
-          } else {
-            // Support player positioning (spread out on field)
-            final double targetX = c.id == 0 
-                ? _width * 0.25 
-                : (c.id == 1 ? _width * 0.5 : _width * 0.75);
-            final double distToTarget = targetX - c.x;
-
-            if (distToTarget.abs() > 40) {
-              c.state = _ToyState.walking;
-              c.vx = distToTarget.sign * c.baseSpeed * 0.75;
-            } else {
+          }
+        } else {
+          // ── AI Behavior ────────────────────────────────────────────────────
+          if (c.actionTimer <= 0 && c.state != _ToyState.kicking) {
+            c.actionTimer = _random.nextDouble() * 2.5 + 1.5;
+            final r = _random.nextDouble();
+            if (r < 0.15 && !c.isJumping) {
               c.state = _ToyState.idle;
               c.vx = 0;
+            } else {
+              c.state = _ToyState.walking;
+            }
+          }
+
+          if (_ball != null && c.state != _ToyState.kicking) {
+            final double distToBall = _ball!.x - c.x;
+            final double distY = _ball!.y - c.y;
+
+            bool isChaser = true;
+            for (final other in _characters) {
+              if (other.id != c.id) {
+                final double otherDist = (other.x - _ball!.x).abs();
+                if (otherDist < distToBall.abs() &&
+                    (other.x - c.x).abs() > 30) {
+                  isChaser = false;
+                }
+              }
             }
 
-            if (c.vx > 5) c.faceLeft = false;
-            if (c.vx < -5) c.faceLeft = true;
+            if (isChaser) {
+              c.state = _ToyState.running;
+              c.vx = distToBall.sign * c.baseSpeed * 1.35;
+              if (c.vx > 5) c.faceLeft = false;
+              if (c.vx < -5) c.faceLeft = true;
+
+              if (distToBall.abs() < 24 && distY < 24) {
+                c.state = _ToyState.kicking;
+                c.kickTimer = 0.0;
+
+                // Try to pass to nearest teammate (or shoot toward left goal)
+                _ToyCharacter? target;
+                double minTargetDist = double.maxFinite;
+                for (final t in _characters) {
+                  if (t.id != c.id && !t.isPlayer) {
+                    final d = (t.x - c.x).abs();
+                    if (d < minTargetDist) {
+                      minTargetDist = d;
+                      target = t;
+                    }
+                  }
+                }
+
+                if (target != null && minTargetDist < _width * 0.4) {
+                  final double passDir = (target.x - c.x).sign;
+                  _ball!.vx = passDir * (190.0 + _random.nextDouble() * 50.0);
+                  _ball!.vy = _random.nextDouble() * 120.0 + 80.0;
+                } else {
+                  // AI shoots toward left goal
+                  _ball!.vx = -(200.0 + _random.nextDouble() * 60.0);
+                  _ball!.vy = _random.nextDouble() * 100 + 60;
+                }
+              } else if (distToBall.abs() < 32 &&
+                  _ball!.y > 22 &&
+                  _ball!.y < 65 &&
+                  !c.isJumping) {
+                c.isJumping = true;
+                c.vy = 240.0;
+                c.vx = distToBall.sign * 40;
+              }
+            } else {
+              final double targetX =
+                  c.id == 0
+                      ? _width * 0.25
+                      : (c.id == 1 ? _width * 0.5 : _width * 0.75);
+              final double distToTarget = targetX - c.x;
+              if (distToTarget.abs() > 40) {
+                c.state = _ToyState.walking;
+                c.vx = distToTarget.sign * c.baseSpeed * 0.75;
+              } else {
+                c.state = _ToyState.idle;
+                c.vx = 0;
+              }
+              if (c.vx > 5) c.faceLeft = false;
+              if (c.vx < -5) c.faceLeft = true;
+            }
           }
         }
 
-        // Apply physics to jumping / gravity
+        // Gravity / jump physics
         if (c.isJumping) {
           c.vy += gravity * dt;
           c.y += c.vy * dt;
-
           if (c.y <= groundY) {
             c.y = groundY;
             c.vy = 0;
@@ -229,29 +359,42 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
           }
         }
 
-        // Move horizontally
         c.x += c.vx * dt;
 
-        // Animate walk/run cycles based on horizontal speed
+        // Walk/run cycle timing
         if (c.state == _ToyState.running || c.state == _ToyState.walking) {
-          final double speedFactor = c.state == _ToyState.running ? 16.0 : 9.0;
+          final double speedFactor =
+              c.state == _ToyState.running ? 16.0 : 9.0;
           c.runTime += dt * (c.vx.abs() / c.baseSpeed) * speedFactor;
         } else {
-          // Slowly decay joint animation to idle state
           c.runTime += dt * 2.0;
         }
 
-        // Screen boundary collisions (bounce back)
-        if (c.x <= 15) {
-          c.x = 15;
+        // Boundary clamp (inside goal posts)
+        if (c.x <= _kGoalWidth + 5) {
+          c.x = _kGoalWidth + 5;
           c.vx = -c.vx;
           c.faceLeft = false;
-        } else if (c.x >= _width - 15) {
-          c.x = _width - 15;
+          if (c.isPlayer) _targetPlayerX = null;
+        } else if (c.x >= _width - _kGoalWidth - 5) {
+          c.x = _width - _kGoalWidth - 5;
           c.vx = -c.vx;
           c.faceLeft = true;
+          if (c.isPlayer) _targetPlayerX = null;
         }
       }
+    });
+  }
+
+  void _restartGame() {
+    setState(() {
+      _playerScore = 0;
+      _aiScore = 0;
+      _challengeTimeLeft = 90.0;
+      _gameOver = false;
+      _goalFlashTimer = 0;
+      _goalMessage = '';
+      _initPlayground();
     });
   }
 
@@ -260,37 +403,315 @@ class _SmallMenPlaygroundState extends State<SmallMenPlayground>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final Color figureColor = isDark
-        ? theme.colorScheme.primary.withAlpha(210)
-        : theme.colorScheme.primary.withAlpha(230);
-    
-    final Color ballColor = isDark ? Colors.white.withAlpha(230) : Colors.black.withAlpha(200);
+    final Color figureColor =
+        isDark
+            ? theme.colorScheme.primary.withAlpha(210)
+            : theme.colorScheme.primary.withAlpha(230);
+    final Color ballColor =
+        isDark ? Colors.white.withAlpha(230) : Colors.black.withAlpha(200);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        _width = constraints.maxWidth;
-        return SizedBox(
-          height: 80,
-          child: CustomPaint(
-            painter: _PlaygroundPainter(
-              characters: _characters,
-              ball: _ball,
-              figureColor: figureColor,
-              ballColor: ballColor,
-              groundColor: theme.colorScheme.primary.withAlpha(120),
-            ),
-            child: Container(),
+    final int minutes = (_challengeTimeLeft / 60).floor();
+    final int seconds = (_challengeTimeLeft % 60).ceil();
+    final String timerLabel =
+        '$minutes:${seconds.toString().padLeft(2, '0')}';
+    final bool timerWarning = _challengeTimeLeft <= 15;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ── Score & Timer HUD ──────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // YOU score
+              _ScoreChip(
+                label: 'YOU',
+                score: _playerScore,
+                color: Colors.orange,
+                isDark: isDark,
+              ),
+              // Timer + restart
+              GestureDetector(
+                onTap: _restartGame,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        _gameOver
+                            ? Colors.green.withAlpha(30)
+                            : timerWarning
+                            ? Colors.red.withAlpha(30)
+                            : theme.colorScheme.primary.withAlpha(20),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color:
+                          _gameOver
+                              ? Colors.green
+                              : timerWarning
+                              ? Colors.red
+                              : theme.colorScheme.primary.withAlpha(80),
+                      width: 1.0,
+                    ),
+                  ),
+                  child:
+                      _gameOver
+                          ? Text(
+                            _playerScore > _aiScore
+                                ? '🏆 YOU WIN!'
+                                : _playerScore < _aiScore
+                                ? '😭 AI WINS'
+                                : '🤝 DRAW',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  _playerScore > _aiScore
+                                      ? Colors.green
+                                      : _playerScore < _aiScore
+                                      ? Colors.red
+                                      : theme.colorScheme.primary,
+                            ),
+                          )
+                          : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.timer_outlined,
+                                size: 11,
+                                color:
+                                    timerWarning
+                                        ? Colors.red
+                                        : theme.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                timerLabel,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  color:
+                                      timerWarning
+                                          ? Colors.red
+                                          : theme.colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                ),
+              ),
+              // AI score
+              _ScoreChip(
+                label: 'AI',
+                score: _aiScore,
+                color: theme.colorScheme.primary,
+                isDark: isDark,
+              ),
+            ],
           ),
-        );
-      },
+        ),
+
+        // ── Playground Canvas ──────────────────────────────────────────────────
+        Focus(
+          autofocus: true,
+          focusNode: _focusNode,
+          onKeyEvent: (node, event) {
+            final logicalKey = event.logicalKey;
+            final isDown = event is KeyDownEvent || event is KeyRepeatEvent;
+            bool handled = false;
+            if (logicalKey == LogicalKeyboardKey.keyA) {
+              _leftPressed = isDown;
+              handled = true;
+            }
+            if (logicalKey == LogicalKeyboardKey.keyD) {
+              _rightPressed = isDown;
+              handled = true;
+            }
+            if (logicalKey == LogicalKeyboardKey.keyW ||
+                logicalKey == LogicalKeyboardKey.space) {
+              _jumpPressed = isDown;
+              handled = true;
+            }
+            // Arrow keys pass through → page scrolls normally
+            return handled ? KeyEventResult.handled : KeyEventResult.ignored;
+          },
+          child: MouseRegion(
+            onEnter: (_) => _focusNode.requestFocus(),
+            onExit: (_) {
+              _focusNode.unfocus();
+              _leftPressed = false;
+              _rightPressed = false;
+              _jumpPressed = false;
+            },
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (details) {
+                _focusNode.requestFocus();
+                if (!_gameOver) _targetPlayerX = details.localPosition.dx;
+              },
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  _width = constraints.maxWidth;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      SizedBox(
+                        height: 80,
+                        child: CustomPaint(
+                          painter: _PlaygroundPainter(
+                            characters: _characters,
+                            ball: _ball,
+                            figureColor: figureColor,
+                            ballColor: ballColor,
+                            groundColor:
+                                theme.colorScheme.primary.withAlpha(120),
+                            isDark: isDark,
+                            goalWidth: _kGoalWidth,
+                          ),
+                          child: Container(),
+                        ),
+                      ),
+                      // ── GOAL flash overlay ───────────────────────────────────
+                      if (_goalFlashTimer > 0)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              opacity: (_goalFlashTimer / 1.8).clamp(0.0, 1.0),
+                              child: Center(
+                                child: Text(
+                                  _goalMessage,
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color:
+                                        _goalMessage.contains('AI')
+                                            ? Colors.red
+                                            : Colors.orange,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withAlpha(120),
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // ── GAME OVER overlay ────────────────────────────────────
+                      if (_gameOver)
+                        Positioned.fill(
+                          child: GestureDetector(
+                            onTap: _restartGame,
+                            child: Container(
+                              color: Colors.black.withAlpha(100),
+                              child: Center(
+                                child: Text(
+                                  'TAP TO RESTART',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white.withAlpha(200),
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+
+        // ── Controls hint ──────────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            'A / D to run  ·  W or Space to jump  ·  Score in the RIGHT goal',
+            style: TextStyle(
+              fontSize: 9,
+              color: theme.colorScheme.onSurface.withAlpha(80),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
+
+// ─── Score Chip Widget ─────────────────────────────────────────────────────────
+
+class _ScoreChip extends StatelessWidget {
+  final String label;
+  final int score;
+  final Color color;
+  final bool isDark;
+
+  const _ScoreChip({
+    required this.label,
+    required this.score,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withAlpha(isDark ? 30 : 20),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withAlpha(100), width: 1.0),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: color,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$score',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: color,
+              fontFamily: 'monospace',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Data Models ───────────────────────────────────────────────────────────────
 
 enum _ToyState { idle, walking, running, jumping, kicking }
 
 class _ToyCharacter {
   final int id;
+  final bool isPlayer;
   double x;
   double y;
   double vx;
@@ -301,10 +722,11 @@ class _ToyCharacter {
   bool isJumping = false;
   _ToyState state;
   double actionTimer = 0.0;
-  double kickTimer = 0.0; // kicking leg angle phase
+  double kickTimer = 0.0;
 
   _ToyCharacter({
     required this.id,
+    this.isPlayer = false,
     required this.x,
     required this.y,
     required this.vx,
@@ -328,12 +750,16 @@ class _SoccerBall {
   });
 }
 
+// ─── CustomPainter ─────────────────────────────────────────────────────────────
+
 class _PlaygroundPainter extends CustomPainter {
   final List<_ToyCharacter> characters;
   final _SoccerBall? ball;
   final Color figureColor;
   final Color ballColor;
   final Color groundColor;
+  final bool isDark;
+  final double goalWidth;
 
   _PlaygroundPainter({
     required this.characters,
@@ -341,13 +767,16 @@ class _PlaygroundPainter extends CustomPainter {
     required this.figureColor,
     required this.ballColor,
     required this.groundColor,
+    required this.isDark,
+    required this.goalWidth,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final double groundY = size.height - 14.0;
+    const double goalHeight = 22.0;
 
-    // 1. Draw Sleek Ground Line
+    // 1. Ground line
     final Paint groundPaint = Paint()
       ..strokeWidth = 2.0
       ..shader = LinearGradient(
@@ -357,51 +786,130 @@ class _PlaygroundPainter extends CustomPainter {
           groundColor.withAlpha(0),
         ],
       ).createShader(Rect.fromLTWH(0, groundY, size.width, 2.0));
-    canvas.drawLine(Offset(0, groundY), Offset(size.width, groundY), groundPaint);
+    canvas.drawLine(
+      Offset(0, groundY),
+      Offset(size.width, groundY),
+      groundPaint,
+    );
 
-    // 2. Draw Bouncing Soccer Ball
+    // 2. Centre line (dashed)
+    final Paint dashPaint = Paint()
+      ..color = groundColor.withAlpha(60)
+      ..strokeWidth = 1.0;
+    const double dashLen = 4.0;
+    const double dashGap = 4.0;
+    double dy = groundY - goalHeight;
+    while (dy <= groundY) {
+      canvas.drawLine(
+        Offset(size.width / 2, dy),
+        Offset(size.width / 2, dy + dashLen),
+        dashPaint,
+      );
+      dy += dashLen + dashGap;
+    }
+
+    // 3. Goal posts
+    final Paint goalPaint = Paint()
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Left goal (AI defends → AI scores here)
+    goalPaint.color = (isDark ? Colors.redAccent : Colors.red).withAlpha(180);
+    // Post
+    canvas.drawLine(
+      Offset(goalWidth, groundY - goalHeight),
+      Offset(goalWidth, groundY),
+      goalPaint,
+    );
+    // Crossbar
+    canvas.drawLine(
+      Offset(0, groundY - goalHeight),
+      Offset(goalWidth, groundY - goalHeight),
+      goalPaint,
+    );
+    // Net area tint
+    canvas.drawRect(
+      Rect.fromLTWH(0, groundY - goalHeight, goalWidth, goalHeight),
+      Paint()..color = Colors.red.withAlpha(isDark ? 25 : 15),
+    );
+
+    // Right goal (Player scores here)
+    goalPaint.color =
+        (isDark ? Colors.greenAccent : Colors.green).withAlpha(180);
+    canvas.drawLine(
+      Offset(size.width - goalWidth, groundY - goalHeight),
+      Offset(size.width - goalWidth, groundY),
+      goalPaint,
+    );
+    canvas.drawLine(
+      Offset(size.width - goalWidth, groundY - goalHeight),
+      Offset(size.width, groundY - goalHeight),
+      goalPaint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(
+        size.width - goalWidth,
+        groundY - goalHeight,
+        goalWidth,
+        goalHeight,
+      ),
+      Paint()..color = Colors.green.withAlpha(isDark ? 25 : 15),
+    );
+
+    // Goal labels
+    _drawLabel(canvas, '←', Offset(goalWidth / 2, groundY - goalHeight - 6),
+        Colors.red.withAlpha(160), 8);
+    _drawLabel(canvas, '→',
+        Offset(size.width - goalWidth / 2, groundY - goalHeight - 6),
+        Colors.green.withAlpha(160), 8);
+
+    // 4. Ball
     if (ball != null) {
       final Offset ballPos = Offset(ball!.x, groundY - ball!.y - 6.0);
-      
-      // Draw ball outer body
-      final Paint ballPaint = Paint()
-        ..color = ballColor
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(ballPos, 6.0, ballPaint);
-
-      // Draw subtle sports pattern inside ball
+      canvas.drawCircle(ballPos, 6.0, Paint()..color = ballColor);
       final Paint patternPaint = Paint()
         ..color = figureColor.withAlpha(150)
         ..strokeWidth = 1.0
         ..style = PaintingStyle.stroke;
       canvas.drawCircle(ballPos, 3.5, patternPaint);
-      canvas.drawLine(Offset(ballPos.dx - 6, ballPos.dy), Offset(ballPos.dx + 6, ballPos.dy), patternPaint);
-      canvas.drawLine(Offset(ballPos.dx, ballPos.dy - 6), Offset(ballPos.dx, ballPos.dy + 6), patternPaint);
+      canvas.drawLine(Offset(ballPos.dx - 6, ballPos.dy),
+          Offset(ballPos.dx + 6, ballPos.dy), patternPaint);
+      canvas.drawLine(Offset(ballPos.dx, ballPos.dy - 6),
+          Offset(ballPos.dx, ballPos.dy + 6), patternPaint);
     }
 
-    // 3. Draw Procedural Animated Figures
-    final Paint limbPaint = Paint()
-      ..color = figureColor
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final Paint headPaint = Paint()
-      ..color = figureColor
-      ..style = PaintingStyle.fill;
-
+    // 5. Procedural Characters
     for (final c in characters) {
       canvas.save();
-      
-      // Translate coordinates to character position (hip is the origin)
-      canvas.translate(c.x, groundY - c.y - 12.0); // pelvic center height
-      
-      // Flip layout if facing left
-      if (c.faceLeft) {
-        canvas.scale(-1.0, 1.0);
+      canvas.translate(c.x, groundY - c.y - 12.0);
+      if (c.faceLeft) canvas.scale(-1.0, 1.0);
+
+      final Color characterColor =
+          c.isPlayer
+              ? (isDark ? Colors.orangeAccent : Colors.orange.shade700)
+              : figureColor;
+
+      final Paint limbPaint = Paint()
+        ..color = characterColor
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+      final Paint headPaint = Paint()
+        ..color = characterColor
+        ..style = PaintingStyle.fill;
+
+      // "YOU" label
+      if (c.isPlayer) {
+        canvas.save();
+        canvas.translate(0, -25.0);
+        if (c.faceLeft) canvas.scale(-1.0, 1.0);
+        _drawLabel(canvas, 'YOU', Offset.zero, characterColor, 8,
+            bold: true, centered: true);
+        canvas.restore();
       }
 
-      // Calculate procedural joint configurations
+      // Procedural joints
       double headTilt = 0.0;
       double torsoTilt = 0.0;
       double leg1Angle = 0.0;
@@ -410,121 +918,131 @@ class _PlaygroundPainter extends CustomPainter {
       double knee2Flex = 0.0;
       double arm1Angle = 0.0;
       double arm2Angle = 0.0;
-      
-      // Height values
-      const double hipY = 0.0;
       const double torsoLen = 10.0;
 
       if (c.state == _ToyState.idle) {
-        // Breathing motion
         final double breath = sin(c.runTime * 2.0) * 0.4;
         torsoTilt = 0.04;
         headTilt = 0.02;
-        
-        // Idle limbs hanging straight
         leg1Angle = 0.05;
         leg2Angle = -0.05;
-        knee1Flex = 0.0;
-        knee2Flex = 0.0;
-        
         arm1Angle = 0.1 + breath * 0.1;
         arm2Angle = -0.1 - breath * 0.1;
       } else if (c.isJumping) {
-        // Jumping pose: legs tucked in, arms raised up
         torsoTilt = -0.08;
         headTilt = 0.1;
-
         leg1Angle = -0.28;
         leg2Angle = 0.15;
         knee1Flex = 0.85;
         knee2Flex = 0.65;
-
-        arm1Angle = 2.5; // Arms high in air
+        arm1Angle = 2.5;
         arm2Angle = 2.2;
       } else if (c.state == _ToyState.kicking) {
-        // Kicking leg snaps forward, standing leg supports, arms open
-        final double phase = c.kickTimer; // ranges [0..pi]
+        final double phase = c.kickTimer;
         final double kickLegAngle = -0.6 + sin(phase) * 1.8;
-        
-        torsoTilt = -0.2; // leaning back
+        torsoTilt = -0.2;
         headTilt = 0.1;
-
-        // Right leg is kicking
         leg2Angle = kickLegAngle;
         knee2Flex = phase > (pi * 0.6) ? 0.1 : 0.6;
-        
-        // Left leg is standing
         leg1Angle = -0.2;
         knee1Flex = 0.2;
-
-        arm1Angle = 0.8; // arms wide for balance
+        arm1Angle = 0.8;
         arm2Angle = -0.8;
       } else {
-        // Walk / Run cycle: sine-wave joint swings
         final double amplitude = c.state == _ToyState.running ? 0.72 : 0.45;
         final double cycle = c.runTime;
-        
         torsoTilt = c.state == _ToyState.running ? 0.18 : 0.08;
         headTilt = c.state == _ToyState.running ? 0.05 : 0.02;
-
-        // Legs swing in anti-phase
         leg1Angle = sin(cycle) * amplitude;
         leg2Angle = -sin(cycle) * amplitude;
-
-        // Bending knees on backswing
         knee1Flex = (cos(cycle) + 1.0) * 0.5 * amplitude * 1.2;
         knee2Flex = (-cos(cycle) + 1.0) * 0.5 * amplitude * 1.2;
-
-        // Arms swing in anti-phase to legs
         arm1Angle = -sin(cycle) * amplitude * 1.1;
         arm2Angle = sin(cycle) * amplitude * 1.1;
       }
 
-      // --- Vector Draw Order (Hip origin at 0,0) ---
-      
-      // 1. Torso segment
-      final Offset hip = Offset.zero;
-      final Offset shoulder = Offset(sin(torsoTilt) * torsoLen, -cos(torsoTilt) * torsoLen);
-      canvas.drawLine(hip, shoulder, limbPaint);
+      // Torso
+      final Offset shoulder =
+          Offset(sin(torsoTilt) * torsoLen, -cos(torsoTilt) * torsoLen);
+      canvas.drawLine(Offset.zero, shoulder, limbPaint);
 
-      // 2. Head segment (neck base to skull)
-      final Offset neck = shoulder + Offset(sin(torsoTilt + headTilt) * 2.0, -cos(torsoTilt + headTilt) * 2.0);
-      canvas.drawCircle(neck - Offset(0, 3.2), 3.2, headPaint);
+      // Head
+      final Offset neck = shoulder +
+          Offset(sin(torsoTilt + headTilt) * 2.0,
+              -cos(torsoTilt + headTilt) * 2.0);
+      canvas.drawCircle(neck - const Offset(0, 3.2), 3.2, headPaint);
 
-      // 3. Draw Arms
-      // Back Arm (Arm 2)
-      final double sArm2Angle = arm2Angle + pi * 0.6; // angle offset
-      final Offset elbow2 = shoulder + Offset(sin(sArm2Angle) * 5.5, cos(sArm2Angle) * 5.5);
-      final Offset hand2 = elbow2 + Offset(sin(sArm2Angle - 0.4) * 5.5, cos(sArm2Angle - 0.4) * 5.5);
+      // Back arm
+      final double sArm2Angle = arm2Angle + pi * 0.6;
+      final Offset elbow2 =
+          shoulder + Offset(sin(sArm2Angle) * 5.5, cos(sArm2Angle) * 5.5);
+      final Offset hand2 = elbow2 +
+          Offset(sin(sArm2Angle - 0.4) * 5.5, cos(sArm2Angle - 0.4) * 5.5);
       canvas.drawLine(shoulder, elbow2, limbPaint);
       canvas.drawLine(elbow2, hand2, limbPaint);
 
-      // Front Arm (Arm 1)
+      // Front arm
       final double sArm1Angle = arm1Angle - pi * 0.6;
-      final Offset elbow1 = shoulder + Offset(sin(sArm1Angle) * 5.5, cos(sArm1Angle) * 5.5);
-      final Offset hand1 = elbow1 + Offset(sin(sArm1Angle + 0.4) * 5.5, cos(sArm1Angle + 0.4) * 5.5);
+      final Offset elbow1 =
+          shoulder + Offset(sin(sArm1Angle) * 5.5, cos(sArm1Angle) * 5.5);
+      final Offset hand1 = elbow1 +
+          Offset(sin(sArm1Angle + 0.4) * 5.5, cos(sArm1Angle + 0.4) * 5.5);
       canvas.drawLine(shoulder, elbow1, limbPaint);
       canvas.drawLine(elbow1, hand1, limbPaint);
 
-      // 4. Draw Legs
-      // Back Leg (Leg 2)
+      // Back leg
       final double sLeg2Angle = leg2Angle + pi * 0.95;
-      final Offset knee2 = hip + Offset(sin(sLeg2Angle) * 6.5, cos(sLeg2Angle) * 6.5);
-      final Offset foot2 = knee2 + Offset(sin(sLeg2Angle - knee2Flex) * 6.0, cos(sLeg2Angle - knee2Flex) * 6.0);
-      canvas.drawLine(hip, knee2, limbPaint);
+      final Offset knee2 =
+          Offset(sin(sLeg2Angle) * 6.5, cos(sLeg2Angle) * 6.5);
+      final Offset foot2 = knee2 +
+          Offset(sin(sLeg2Angle - knee2Flex) * 6.0,
+              cos(sLeg2Angle - knee2Flex) * 6.0);
+      canvas.drawLine(Offset.zero, knee2, limbPaint);
       canvas.drawLine(knee2, foot2, limbPaint);
 
-      // Front Leg (Leg 1)
+      // Front leg
       final double sLeg1Angle = leg1Angle + pi * 0.95;
-      final Offset knee1 = hip + Offset(sin(sLeg1Angle) * 6.5, cos(sLeg1Angle) * 6.5);
-      final Offset foot1 = knee1 + Offset(sin(sLeg1Angle - knee1Flex) * 6.0, cos(sLeg1Angle - knee1Flex) * 6.0);
-      canvas.drawLine(hip, knee1, limbPaint);
+      final Offset knee1 =
+          Offset(sin(sLeg1Angle) * 6.5, cos(sLeg1Angle) * 6.5);
+      final Offset foot1 = knee1 +
+          Offset(sin(sLeg1Angle - knee1Flex) * 6.0,
+              cos(sLeg1Angle - knee1Flex) * 6.0);
+      canvas.drawLine(Offset.zero, knee1, limbPaint);
       canvas.drawLine(knee1, foot1, limbPaint);
 
       canvas.restore();
     }
   }
 
+  void _drawLabel(
+    Canvas canvas,
+    String text,
+    Offset center,
+    Color color,
+    double fontSize, {
+    bool bold = false,
+    bool centered = false,
+  }) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          fontFamily: 'monospace',
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(
+      canvas,
+      centered
+          ? Offset(center.dx - tp.width / 2, center.dy - tp.height / 2)
+          : center,
+    );
+  }
+
   @override
-  bool shouldRepaint(_PlaygroundPainter old) => true; // Constant tick animations
+  bool shouldRepaint(_PlaygroundPainter old) => true;
 }
