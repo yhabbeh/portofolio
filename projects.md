@@ -1,26 +1,52 @@
 # Portfolio Projects
 
-A comprehensive overview of open-source projects spanning Mobile Applications, AI & Machine Learning, and Web & Tools, exactly as defined in the web portfolio.
+A comprehensive overview of projects spanning Professional Work, Mobile Applications, AI & Machine Learning, and Web & Tools, exactly as defined in the web portfolio.
+
+---
+
+## 💼 Professional Projects
+
+### BinDowal Bank
+* **Description:** Engineered core banking UIs encompassing financial transactions, account overviews, and debit/credit card management. Architected with Clean Architecture for maintainability and scalability. Implemented BLoC to orchestrate complex financial state transitions with high-performance execution.
+* **Technologies:** `Flutter`, `BLoC`, `Clean Architecture`
+* **Google Play:** [BinDowal Bank](https://play.google.com/store/apps/details?id=com.mobile.newdemobanking)
+
+### Sanad — Ministry of Foreign Affairs
+* **Description:** Spearheaded micro-services digitizing legal government processes including marriage declarations and sponsorships. Integrated complex Ministry of Economy APIs handling sensitive government data under strict security protocols. Adhered to enterprise-grade government standards for code architecture and UI/UX compliance.
+* **Technologies:** `Flutter`, `REST APIs`
+* **Google Play:** [Sanad](https://play.google.com/store/apps/details?id=com.modee.sanad)
+
+### EduWave K-12
+* **Description:** Developed and optimized assessment and assignment modules for student engagement and educator administration. Built administrative dashboards enabling educators to monitor class progress, author exams, and track student grading.
+* **Technologies:** `Flutter`, `BLoC`
+* **Google Play:** [EduWave K-12](https://play.google.com/store/apps/details?id=com.itgsolutions.eduwave)
+
+### WaveDMS
+* **Description:** Executed debugging and performance optimization protocols, significantly improving system stability. Pioneered a digital document signature feature with automated routing for seamless multi-department authorization.
+* **Technologies:** `Flutter`, `Digital Signatures`, `Workflow Automation`
+* **Google Play:** [WaveDMS](https://play.google.com/store/apps/details?id=com.itgsolutions.WaveDMS)
+
+### ITG Timecard
+* **Description:** Upgraded GPS-based attendance tracking with advanced anti-spoofing mechanisms ensuring location data integrity. Engineered employee management modules for leave and departure request submission and tracking.
+* **Technologies:** `Flutter`, `GPS`, `Anti-Spoofing`
+* **Google Play:** [ITG Timecard](https://play.google.com/store/apps/details?id=com.itgsolutions.gpsAttendanceSystem)
 
 ---
 
 ## 📱 Mobile Applications
 
-### drugmngqwn
+### Drug Managment
 * **Description:** Home Pharmacy Management & Medication Reminders. An offline-first Android app built with Clean Architecture and BLoC/Cubit.
 * **Technologies:** `Flutter`, `Dart`, `BLoC`, `Clean Architecture`, `SQLite`
-* **GitHub Repository:** [yhabbeh/drugmngqwn](https://github.com/yhabbeh/drugmngqwn)
+* **Stars:** ⭐ 1
+* **GitHub Repository:** [yhabbeh/drugMNG](https://github.com/yhabbeh/drugMNG)
 
-### drug_reminder
-* **Description:** Medication management app with scheduling, dose reminders, and contact integration.
-* **Technologies:** `Flutter`, `Dart`, `BLoC`, `Notifications`
-* **GitHub Repository:** [yhabbeh/drug_reminder](https://github.com/yhabbeh/drug_reminder)
-
-### dental-appointment-mobile
-* **Description:** Professional dental practice management app with Firebase authentication, multi-language support, biometric auth, and patient management.
-* **Technologies:** `Flutter`, `Firebase`, `Localization`, `Biometrics`
+### AppointDent Dental Manager
+* **Description:** Architected and deployed from inception as a comprehensive end-to-end solution for dental clinic management. Designed with Clean Architecture for scalability. Integrated Firebase for secure authorization and real-time cloud database. Employs BLoC for fluid performance and rapid responsiveness.
+* **Technologies:** `Flutter`, `Firebase`, `BLoC`, `Clean Architecture`
 * **Stars:** ⭐ 1
 * **GitHub Repository:** [yhabbeh/dental-appointment-mobile](https://github.com/yhabbeh/dental-appointment-mobile)
+* **Google Play:** [AppointDent](https://play.google.com/store/apps/details?id=com.habbeh.dental)
 
 ### al-mathurat
 * **Description:** Islamic morning and evening adhkar (remembrances) mobile application.
@@ -33,23 +59,6 @@ A comprehensive overview of open-source projects spanning Mobile Applications, A
 * **Technologies:** `Flutter`, `Dart`
 * **Stars:** ⭐ 2
 * **GitHub Repository:** [yhabbeh/Neuro_Stem](https://github.com/yhabbeh/Neuro_Stem)
-
-### Clean_architecture
-* **Description:** Flutter project demonstrating clean architecture principles with domain, data, and presentation layer separation.
-* **Technologies:** `Flutter`, `Dart`, `Clean Architecture`
-* **Stars:** ⭐ 1
-* **GitHub Repository:** [yhabbeh/Clean_architecture](https://github.com/yhabbeh/Clean_architecture)
-
-### Flutter_UI_task1
-* **Description:** Flutter UI exploration project showcasing custom widget design and layout techniques.
-* **Technologies:** `Flutter`, `Dart`, `UI/UX`
-* **Stars:** ⭐ 1
-* **GitHub Repository:** [yhabbeh/Flutter_UI_task1](https://github.com/yhabbeh/Flutter_UI_task1)
-
-### taskProgressSoft
-* **Description:** Flutter task management application with progress tracking features.
-* **Technologies:** `Flutter`, `Dart`
-* **GitHub Repository:** [yhabbeh/taskProgressSoft](https://github.com/yhabbeh/taskProgressSoft)
 
 ---
 
@@ -71,11 +80,6 @@ A comprehensive overview of open-source projects spanning Mobile Applications, A
 
 ## 🌐 Web & Tools
 
-### audit_project
-* **Description:** Audit Committee Management System — a production-ready SPA for managing audit operations with role-based access, meeting/decision CRUD, Word report generation, and Claude AI integration.
-* **Technologies:** `JavaScript`, `HTML`, `CSS`, `Claude AI`, `Google Sheets`
-* **GitHub Repository:** [yhabbeh/audit_project](https://github.com/yhabbeh/audit_project)
-
 ### Water_Metric_Steps
 * **Description:** Interactive water intake tracker with step-based goal tracking and visual progress indicators.
 * **Technologies:** `CSS`, `HTML`, `JavaScript`
@@ -85,4 +89,5 @@ A comprehensive overview of open-source projects spanning Mobile Applications, A
 ### library-inventory
 * **Description:** JavaScript-based library inventory management system.
 * **Technologies:** `JavaScript`, `HTML`, `CSS`
+* **Stars:** ⭐ 1
 * **GitHub Repository:** [yhabbeh/library-inventory](https://github.com/yhabbeh/library-inventory)

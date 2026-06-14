@@ -23,16 +23,11 @@
 
 ## ✨ Features
 
-- **Interactive UI** — Particle background, cursor glow effect, tilt cards, scroll progress bar
+- **Interactive UI** — Particle background, falling code snippets, cursor glow effect, Lottie character
 - **Fully Responsive** — Adapts seamlessly from mobile to desktop via `ResponsiveContainer`
 - **8 Sections** — Hero, About, Experience, Skills, Projects, Certifications, Awards, Contact
 - **Dynamic Navbar** — Smooth scroll navigation with active section tracking
-- **Offline-ready** — Static portfolio with no backend dependencies
-
-## 🖥️ Live Demo
-
-> <!-- TODO: Replace with your deployed URL -->
-> [View Live](https://yhabbeh.github.io/portfolio)
+- **Data-driven** — All content loaded from a local JSON asset via BLoC pattern
 
 ## 🛠️ Tech Stack
 
@@ -40,9 +35,9 @@
 |---|---|
 | **Framework** | Flutter (Web) |
 | **Language** | Dart (^3.11.0) |
-| **Architecture** | Clean Architecture, Component-based UI |
-| **State** | Stateless + Stateful widgets |
-| **Packages** | `url_launcher`, `cupertino_icons` |
+| **Architecture** | Clean Architecture, BLoC pattern, Component-based UI |
+| **State Management** | flutter_bloc |
+| **Packages** | `url_launcher`, `flutter_bloc`, `equatable`, `shared_preferences`, `get_it`, `lottie` |
 
 ## 🚀 Getting Started
 
@@ -69,47 +64,53 @@ Deploy the `build/web/` directory to any static host (GitHub Pages, Vercel, Netl
 
 ```
 lib/
-├── main.dart                  # App entry point
-├── app.dart                   # MaterialApp, theming, color scheme
+├── main.dart                        # App entry point
+├── app.dart                         # MaterialApp, theming, DI setup
 ├── core/
-│   ├── constants.dart         # All content data (experiences, skills, projects)
-│   ├── app_colors.dart        # Color palette constants
-│   └── app_text_styles.dart   # Typography definitions
-├── models/
-│   ├── experience_model.dart  # Experience data model
-│   ├── project_model.dart     # Project data model with categories
-│   └── skill_model.dart       # Skill category model
-├── sections/                  # One file per portfolio section
-│   ├── home_page.dart         # Main scaffold assembling all sections
-│   ├── hero_section.dart      # Intro with role, tagline, CTA
-│   ├── about_section.dart     # Bio and key highlights
-│   ├── experience_section.dart
-│   ├── skills_section.dart
-│   ├── projects_section.dart
-│   ├── certifications_section.dart
-│   ├── awards_section.dart
-│   └── contact_section.dart
-└── widgets/                   # Reusable UI components
-    ├── navbar.dart            # Sticky nav with active-section highlighting
-    ├── section_title.dart     # Consistent heading for each section
-    ├── experience_card.dart
-    ├── project_card.dart
-    ├── skill_chip.dart
+│   ├── constants.dart               # App-wide constants
+│   ├── app_colors.dart              # Color palette
+│   └── app_text_styles.dart         # Typography
+├── features/portfolio/
+│   ├── data/
+│   │   ├── datasources/
+│   │   │   └── portfolio_local_data_source.dart  # Loads portfolio.json
+│   │   └── models/
+│   │       └── portfolio_data_model.dart         # JSON → Entity mapping
+│   ├── domain/
+│   │   └── entities/
+│   │       └── portfolio_data.dart               # Domain model
+│   └── presentation/
+│       ├── blocs/portfolio/                      # BLoC state management
+│       ├── pages/
+│       │   └── home_page.dart                    # Main scaffold
+│       └── sections/                             # One file per section
+│           ├── hero_section.dart
+│           ├── about_section.dart
+│           ├── experience_section.dart
+│           ├── skills_section.dart
+│           ├── projects_section.dart
+│           ├── certifications_section.dart
+│           ├── awards_section.dart
+│           └── contact_section.dart
+└── widgets/                          # Reusable UI components
+    ├── navbar.dart
+    ├── section_title.dart
     ├── primary_button.dart
-    ├── scroll_progress_bar.dart # Top progress indicator on scroll
-    ├── particle_background.dart # Animated particle canvas
-    ├── tilt_card.dart          # 3D tilt-on-hover card effect
-    ├── cursor_glow.dart        # Custom animated cursor glow
-    └── responsive_container.dart # Adaptive width for mobile/tablet/desktop
+    ├── particle_background.dart
+    ├── falling_code_snippets.dart
+    ├── grid_background.dart
+    ├── cursor_glow.dart
+    ├── roaming_lottie_character.dart
+    └── responsive_container.dart
 ```
 
 ## 🧑‍💻 Customization
 
-All portfolio content lives in a single file — **`lib/core/constants.dart`**:
+All portfolio content lives in **`assets/data/portfolio.json`**:
 - Personal info, bio, and contact links
-- Work experience entries (title, company, period, responsibilities)
+- Work experience entries
 - Skill categories and tags
-- Projects with descriptions, technologies, and GitHub URLs
+- Projects with descriptions, technologies, and URLs
 - Certifications and awards
 
 Edit that file, and the portfolio updates everywhere.
